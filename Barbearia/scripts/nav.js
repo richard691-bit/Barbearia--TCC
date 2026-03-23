@@ -2,11 +2,11 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ---- Menu desktop: garante fechado ao carregar ----
+    // Garante menu fechado ao carregar
     const navMenu = document.getElementById('nav-menu');
     if (navMenu) navMenu.classList.remove('aberto');
 
-    // ---- Sidebar mobile ----
+    // Sidebar
     const btnAbrir  = document.getElementById('btn-menu-sidebar');
     const sidebar   = document.getElementById('sidebar');
     const overlay   = document.getElementById('sidebar-overlay');
@@ -30,12 +30,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnFechar) btnFechar.addEventListener('click', fecharSidebar);
     if (overlay)   overlay.addEventListener('click', fecharSidebar);
 
-    // Fecha ao clicar em qualquer link da sidebar
     document.querySelectorAll('#sidebar-nav a').forEach(link => {
         link.addEventListener('click', fecharSidebar);
     });
 
-    // ---- Marca página atual como ativa (desktop e sidebar) ----
+    // Marca página atual como ativa
     const paginaAtual = window.location.pathname.split('/').pop() || 'index.html';
     document.querySelectorAll('nav ul a, #sidebar-nav a').forEach(link => {
         if (link.getAttribute('href') === paginaAtual) {

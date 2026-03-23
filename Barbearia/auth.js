@@ -14,6 +14,7 @@ import {
     doc,
     setDoc,
     getDoc,
+    updateDoc,
     serverTimestamp
 } from 'firebase/firestore';
 
@@ -31,6 +32,23 @@ async function salvarUsuario(user, nomeExtra = null) {
             telefone: '',
             criadoEm: serverTimestamp()
         });
+    }
+}
+
+// ---- ATUALIZAR TELEFONE DO USUÁRIO ----
+// Chamada pelo agendamento quando o cliente informa o telefone
+export async function atualizarTelefone(uid, telefone) {
+    if (!uid || !telefone) return;
+    try {
+        const ref  = doc(db, 'usuarios', uid);
+        const snap = await getDoc(ref);
+
+        // Só atualiza se o telefone ainda estiver vazio
+        if (snap.exists() && !snap.data().telefone) {
+            await updateDoc(ref, { telefone });
+        }
+    } catch (e) {
+        console.error('Erro ao atualizar telefone:', e);
     }
 }
 

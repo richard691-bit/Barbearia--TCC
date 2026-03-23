@@ -142,7 +142,7 @@ body {
     height: 45px;
     width: 100%;
     border: none;
-    background-color: #232323;
+    background-color: #ffffff;
 }
 input:-webkit-autofill 
 {    
@@ -150,7 +150,7 @@ input:-webkit-autofill
     -webkit-text-fill-color: #fff !important;
 }
 .label-input {
-    background-color: #232323;
+    background-color: #ffffff;
     display: flex;
     align-items: center;
     margin: 8px;

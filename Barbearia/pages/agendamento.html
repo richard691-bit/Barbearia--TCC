@@ -4,18 +4,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agendamento — Elite Barber</title>
-        <script>
-        window.tailwind = { corePlugins: { preflight: false } };
-    </script>
+    <script>window.tailwind = { corePlugins: { preflight: false } };</script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="../styles/style.css"> <!-- Estilo Principal -->
+    <link rel="stylesheet" href="../styles/style.css">
     <link rel="stylesheet" href="../styles/agendamento.css">
     <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+    <style>
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 400;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+        }
+        .modal-overlay.aberto { display: flex; }
+        .modal-card {
+            background: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 12px;
+            padding: 40px 36px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            margin: 20px;
+        }
+        .modal-card .icone { font-size: 2.5rem; margin-bottom: 16px; }
+        .modal-card h3 {
+            font-family: var(--fonte-titulo);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--preto);
+            margin-bottom: 10px;
+        }
+        .modal-card p {
+            color: var(--cinza-medio);
+            font-size: 0.88rem;
+            font-weight: 300;
+            margin-bottom: 28px;
+            line-height: 1.7;
+        }
+        .modal-botoes { display: flex; flex-direction: column; gap: 10px; }
+        .modal-botoes a, .modal-botoes button {
+            display: block; width: 100%;
+            padding: 12px; border-radius: var(--raio);
+            font-family: var(--fonte-corpo);
+            font-size: 0.85rem; font-weight: 500;
+            letter-spacing: 1px; text-transform: uppercase;
+            text-decoration: none; cursor: pointer;
+            transition: opacity 0.2s; text-align: center;
+        }
+        .modal-btn-login { background: var(--preto); color: var(--branco); border: none; }
+        .modal-btn-login:hover { opacity: 0.8; }
+        .modal-btn-visitante {
+            background: transparent; color: var(--cinza-medio);
+            border: 1px dashed var(--cinza-borda);
+        }
+        .modal-btn-visitante:hover { color: var(--preto); border-color: var(--cinza-medio); }
+        .badge-logado {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #f0fdf4; border: 1px solid #b7dfc2;
+            color: #2d6a4f; font-size: 0.75rem; font-weight: 500;
+            padding: 4px 10px; border-radius: 50px; margin-bottom: 16px;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- HEADER -->
-        <header>
+    <header>
         <div class="nav-inner">
             <a href="index.html" class="logo">
                 <span class="logo-nome">Elite Barber</span>
@@ -34,7 +92,7 @@
             <button class="btn-menu-sidebar" id="btn-menu-sidebar">☰ Menu</button>
         </div>
     </header>
-    <!-- SIDEBAR -->
+
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -56,8 +114,20 @@
         </div>
     </aside>
 
-    <main>
+    <!-- MODAL LOGIN -->
+    <div class="modal-overlay" id="modal-login">
+        <div class="modal-card">
+            <div class="icone">🔒</div>
+            <h3>Quase lá!</h3>
+            <p>Para salvar seu agendamento na sua conta faça login. Ou continue sem conta — seu horário ainda será reservado.</p>
+            <div class="modal-botoes">
+                <a href="login.html" class="modal-btn-login">Fazer Login / Cadastrar</a>
+                <button class="modal-btn-visitante" id="modal-btn-visitante">Continuar sem conta</button>
+            </div>
+        </div>
+    </div>
 
+    <main>
         <section class="page-hero">
             <h1>Agende Seu <span>Horário</span></h1>
             <p>Preencha os dados abaixo e garanta seu atendimento premium.</p>
@@ -66,7 +136,10 @@
         <div class="wizard-container">
             <div class="wizard-card">
 
-                <!-- INDICADOR DE PASSOS -->
+                <div id="badge-logado" style="display:none">
+                    <span class="badge-logado">✓ Logado como <span id="badge-nome"></span></span>
+                </div>
+
                 <div class="steps-indicator">
                     <div class="step-item">
                         <div class="step-circulo ativo" id="circulo-1">1</div>
@@ -84,30 +157,30 @@
                     </div>
                 </div>
 
-                <!-- PASSO 1: DADOS PESSOAIS -->
+                <!-- PASSO 1 -->
                 <div class="passo ativo" id="passo-1">
                     <h3>Seus Dados Pessoais</h3>
                     <div class="campo" id="campo-nome">
                         <label for="nome">👤 Nome Completo</label>
-                        <input type="text" id="nome" name="nome" placeholder="Ex: João Silva">
+                        <input type="text" id="nome" placeholder="Ex: João Silva">
                         <span class="erro">Por favor, informe seu nome completo.</span>
                     </div>
                     <div class="campo" id="campo-telefone">
                         <label for="telefone">📞 Telefone / WhatsApp</label>
-                        <input type="tel" id="telefone" name="telefone" placeholder="(11) 98765-4321">
+                        <input type="tel" id="telefone" placeholder="(11) 98765-4321">
                         <span class="erro">Por favor, informe seu telefone.</span>
                     </div>
                     <div class="nav-passos">
-                        <button class="btn-proximo" onclick="irParaPasso(2)">Próximo →</button>
+                        <button class="btn-proximo" id="btn-prox-1">Próximo →</button>
                     </div>
                 </div>
 
-                <!-- PASSO 2: SERVIÇO E DATA -->
+                <!-- PASSO 2 -->
                 <div class="passo" id="passo-2">
                     <h3>Escolha o Serviço e Data</h3>
                     <div class="campo" id="campo-servico">
                         <label for="servico">✂️ Serviço</label>
-                        <select id="servico" name="servico">
+                        <select id="servico">
                             <option value="">— Selecione um serviço —</option>
                             <option value="Corte Clássico|R$ 60,00|45 min">Corte Clássico — R$ 60,00</option>
                             <option value="Corte + Barba|R$ 90,00|1h 15min">Corte + Barba — R$ 90,00</option>
@@ -120,7 +193,7 @@
                     </div>
                     <div class="campo" id="campo-data">
                         <label for="data">📅 Data do Agendamento</label>
-                        <input type="date" id="data" name="data">
+                        <input type="date" id="data">
                         <span class="erro">Por favor, selecione uma data.</span>
                     </div>
                     <p class="titulo-horarios">🕐 Horário Disponível</p>
@@ -136,64 +209,48 @@
                     </div>
                     <p class="erro-horario" id="erro-horario">Por favor, selecione um horário.</p>
                     <div class="nav-passos">
-                        <button class="btn-voltar" onclick="irParaPasso(1)">← Voltar</button>
-                        <button class="btn-proximo" onclick="irParaPasso(3)">Próximo →</button>
+                        <button class="btn-voltar" id="btn-volt-2">← Voltar</button>
+                        <button class="btn-proximo" id="btn-prox-2">Próximo →</button>
                     </div>
                 </div>
 
-                <!-- PASSO 3: REVISÃO -->
+                <!-- PASSO 3 -->
                 <div class="passo" id="passo-3">
                     <h3>Revisão e Confirmação</h3>
                     <div class="revisao-box">
-                        <div class="revisao-item">
-                            <span>Cliente</span>
-                            <span id="rev-nome">—</span>
-                        </div>
-                        <div class="revisao-item">
-                            <span>Telefone</span>
-                            <span id="rev-telefone">—</span>
-                        </div>
-                        <div class="revisao-item">
-                            <span>Serviço</span>
-                            <span id="rev-servico">—</span>
-                        </div>
-                        <div class="revisao-item">
-                            <span>Valor</span>
-                            <span id="rev-valor">—</span>
-                        </div>
-                        <div class="revisao-item">
-                            <span>Data e Hora</span>
-                            <span id="rev-data-hora">—</span>
-                        </div>
+                        <div class="revisao-item"><span>Cliente</span><span id="rev-nome">—</span></div>
+                        <div class="revisao-item"><span>Telefone</span><span id="rev-telefone">—</span></div>
+                        <div class="revisao-item"><span>Serviço</span><span id="rev-servico">—</span></div>
+                        <div class="revisao-item"><span>Valor</span><span id="rev-valor">—</span></div>
+                        <div class="revisao-item"><span>Data e Hora</span><span id="rev-data-hora">—</span></div>
                     </div>
                     <div class="campo">
                         <label for="observacoes">✏️ Observações (opcional)</label>
-                        <textarea id="observacoes" name="observacoes" rows="3" placeholder="Alguma preferência ou observação?"></textarea>
+                        <textarea id="observacoes" rows="3" placeholder="Alguma preferência ou observação?"></textarea>
                     </div>
                     <div class="nav-passos">
-                        <button class="btn-voltar" onclick="irParaPasso(2)">← Voltar</button>
-                        <button class="btn-confirmar" onclick="confirmarAgendamento()">✅ Confirmar Agendamento</button>
+                        <button class="btn-voltar" id="btn-volt-3">← Voltar</button>
+                        <button class="btn-confirmar" id="btn-confirmar">✅ Confirmar Agendamento</button>
                     </div>
                 </div>
 
-                <!-- TELA DE CONFIRMAÇÃO -->
+                <!-- CONFIRMAÇÃO -->
                 <div class="confirmado" id="confirmado">
                     <div class="check">✅</div>
                     <h3>Agendamento Confirmado!</h3>
                     <p>Seu horário foi reservado com sucesso.</p>
                     <p class="detalhe-confirmado" id="confirm-detalhe"></p>
-                    <p style="font-size:0.85rem; color:#9ca3af;">Em breve você receberá uma confirmação. Aguardamos você!</p>
-                    <div style="margin-top: 32px;">
+                    <p style="font-size:0.85rem;color:#9ca3af;">Em breve você receberá uma confirmação. Aguardamos você!</p>
+                    <div style="margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
                         <a href="index.html" class="btn-primario">Voltar ao Início</a>
+                        <a href="minha-conta.html" class="btn-escuro" id="link-minha-conta" style="display:none">Ver Meus Agendamentos</a>
                     </div>
                 </div>
 
             </div>
         </div>
-
     </main>
 
-    <!-- FOOTER -->
     <footer>
         <strong>Elite Barber</strong>
         <p>Rua Augusta, 1234 — São Paulo, SP &nbsp;|&nbsp; <a href="contato.html">Fale Conosco</a></p>
@@ -201,9 +258,32 @@
     </footer>
 
     <script src="../scripts/nav.js" defer></script>
-    <script>
+    <script type="module">
+        import { observarLogin, buscarDadosUsuario, atualizarTelefone } from '../scripts/auth.js';
+        import { db } from '../scripts/firebaseConfig.js';
+        import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
         let passoAtual = 1;
         const totalPassos = 3;
+        let usuarioLogado = null;
+        let confirmarSemLogin = false;
+
+        // Verifica login e pré-preenche
+        observarLogin(async usuario => {
+            usuarioLogado = usuario;
+            if (!usuario) return;
+
+            document.getElementById('badge-logado').style.display = 'block';
+            document.getElementById('link-minha-conta').style.display = 'inline-block';
+
+            const dados = await buscarDadosUsuario(usuario.uid);
+            const nome  = dados?.nome || usuario.displayName || '';
+            const tel   = dados?.telefone || '';
+
+            document.getElementById('badge-nome').textContent = nome.split(' ')[0];
+            if (nome) document.getElementById('nome').value = nome;
+            if (tel)  document.getElementById('telefone').value = tel;
+        });
 
         // Seleção de horário
         document.querySelectorAll('.time-slot').forEach(slot => {
@@ -217,87 +297,51 @@
         function atualizarIndicador() {
             for (let i = 1; i <= totalPassos; i++) {
                 const circulo = document.getElementById(`circulo-${i}`);
-                const label = circulo?.nextElementSibling;
-
+                const label   = circulo?.nextElementSibling;
                 circulo.classList.remove('ativo', 'concluido');
                 label?.classList.remove('ativo');
-
-                if (i < passoAtual) {
-                    circulo.classList.add('concluido');
-                    circulo.textContent = '✓';
-                } else if (i === passoAtual) {
-                    circulo.classList.add('ativo');
-                    circulo.textContent = i;
-                    label?.classList.add('ativo');
-                } else {
-                    circulo.textContent = i;
-                }
-
-                // Linha entre passos
+                if (i < passoAtual) { circulo.classList.add('concluido'); circulo.textContent = '✓'; }
+                else if (i === passoAtual) { circulo.classList.add('ativo'); circulo.textContent = i; label?.classList.add('ativo'); }
+                else { circulo.textContent = i; }
                 if (i < totalPassos) {
-                    const linha = document.getElementById(`linha-${i}`);
-                    if (linha) {
-                        linha.classList.toggle('ativa', i < passoAtual);
-                    }
+                    document.getElementById(`linha-${i}`)?.classList.toggle('ativa', i < passoAtual);
                 }
             }
         }
 
         function mostrarPasso(n) {
             document.querySelectorAll('.passo').forEach(p => p.classList.remove('ativo'));
-            const alvo = document.getElementById(`passo-${n}`);
-            if (alvo) alvo.classList.add('ativo');
+            document.getElementById(`passo-${n}`)?.classList.add('ativo');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function validarPasso1() {
             const nome = document.getElementById('nome');
-            const telefone = document.getElementById('telefone');
-            const campoNome = document.getElementById('campo-nome');
-            const campoTel = document.getElementById('campo-telefone');
-            let valido = true;
-
-            campoNome.classList.toggle('invalido', !nome.value.trim());
-            campoTel.classList.toggle('invalido', !telefone.value.trim());
-
-            if (!nome.value.trim() || !telefone.value.trim()) valido = false;
-            return valido;
+            const tel  = document.getElementById('telefone');
+            document.getElementById('campo-nome').classList.toggle('invalido', !nome.value.trim());
+            document.getElementById('campo-telefone').classList.toggle('invalido', !tel.value.trim());
+            return nome.value.trim() && tel.value.trim();
         }
 
         function validarPasso2() {
             const servico = document.getElementById('servico');
-            const data = document.getElementById('data');
+            const data    = document.getElementById('data');
             const horario = document.querySelector('.time-slot.selecionado');
-            const campoServico = document.getElementById('campo-servico');
-            const campoData = document.getElementById('campo-data');
-            const erroHorario = document.getElementById('erro-horario');
-            let valido = true;
-
-            campoServico.classList.toggle('invalido', !servico.value);
-            campoData.classList.toggle('invalido', !data.value);
-            erroHorario.classList.toggle('visivel', !horario);
-
-            if (!servico.value || !data.value || !horario) valido = false;
-            return valido;
+            document.getElementById('campo-servico').classList.toggle('invalido', !servico.value);
+            document.getElementById('campo-data').classList.toggle('invalido', !data.value);
+            document.getElementById('erro-horario').classList.toggle('visivel', !horario);
+            return servico.value && data.value && horario;
         }
 
         function preencherRevisao() {
-            const nome = document.getElementById('nome').value;
-            const telefone = document.getElementById('telefone').value;
-            const servicoVal = document.getElementById('servico').value;
-            const data = document.getElementById('data').value;
+            const partes  = document.getElementById('servico').value.split('|');
+            const data    = document.getElementById('data').value;
             const horario = document.querySelector('.time-slot.selecionado');
-
-            const partes = servicoVal.split('|');
-            const nomeServico = partes[0] || '';
-            const valor = partes[1] || '';
-            const hora = horario ? horario.getAttribute('data-time') : '';
-
-            document.getElementById('rev-nome').textContent = nome;
-            document.getElementById('rev-telefone').textContent = telefone;
-            document.getElementById('rev-servico').textContent = nomeServico;
-            document.getElementById('rev-valor').textContent = valor;
-            document.getElementById('rev-data-hora').textContent = `${data} às ${hora}`;
+            document.getElementById('rev-nome').textContent     = document.getElementById('nome').value;
+            document.getElementById('rev-telefone').textContent = document.getElementById('telefone').value;
+            document.getElementById('rev-servico').textContent  = partes[0] || '';
+            document.getElementById('rev-valor').textContent    = partes[1] || '';
+            document.getElementById('rev-data-hora').textContent = `${data} às ${horario?.getAttribute('data-time') || ''}`;
         }
 
         function irParaPasso(destino) {
@@ -311,15 +355,65 @@
             mostrarPasso(passoAtual);
         }
 
-        function confirmarAgendamento() {
-            const dataHora = document.getElementById('rev-data-hora').textContent;
-            const servico = document.getElementById('rev-servico').textContent;
-            document.getElementById('confirm-detalhe').textContent = `${servico} — ${dataHora}`;
+        // Botões de navegação
+        document.getElementById('btn-prox-1').addEventListener('click', () => irParaPasso(2));
+        document.getElementById('btn-prox-2').addEventListener('click', () => irParaPasso(3));
+        document.getElementById('btn-volt-2').addEventListener('click', () => irParaPasso(1));
+        document.getElementById('btn-volt-3').addEventListener('click', () => irParaPasso(2));
 
-            // Esconde todos os passos e mostra confirmação
+        // Confirmar
+        document.getElementById('btn-confirmar').addEventListener('click', () => {
+            if (!usuarioLogado && !confirmarSemLogin) {
+                document.getElementById('modal-login').classList.add('aberto');
+                return;
+            }
+            salvarAgendamento();
+        });
+
+        // Modal: continuar sem conta
+        document.getElementById('modal-btn-visitante').addEventListener('click', () => {
+            confirmarSemLogin = true;
+            document.getElementById('modal-login').classList.remove('aberto');
+            salvarAgendamento();
+        });
+
+        document.getElementById('modal-login').addEventListener('click', e => {
+            if (e.target === document.getElementById('modal-login')) {
+                document.getElementById('modal-login').classList.remove('aberto');
+            }
+        });
+
+        async function salvarAgendamento() {
+            const servico  = document.getElementById('rev-servico').textContent;
+            const valor    = document.getElementById('rev-valor').textContent;
+            const dataHora = document.getElementById('rev-data-hora').textContent;
+            const [data, hora] = dataHora.split(' às ');
+
+            try {
+                await addDoc(collection(db, 'agendamentos'), {
+                    nome:        document.getElementById('nome').value,
+                    telefone:    document.getElementById('telefone').value,
+                    servico, valor, data, hora,
+                    observacoes: document.getElementById('observacoes').value,
+                    status:      'confirmado',
+                    criadoEm:    serverTimestamp(),
+                    usuarioId:   usuarioLogado ? usuarioLogado.uid : null
+                });
+
+                // Atualiza telefone no perfil se estiver logado e campo estiver vazio
+                if (usuarioLogado) {
+                    const telefone = document.getElementById('telefone').value;
+                    await atualizarTelefone(usuarioLogado.uid, telefone);
+                }
+            } catch (e) {
+                console.error('Erro ao salvar:', e);
+            }
+
+            document.getElementById('confirm-detalhe').textContent = `${servico} — ${dataHora}`;
             document.querySelectorAll('.passo').forEach(p => p.classList.remove('ativo'));
             document.querySelector('.steps-indicator').style.display = 'none';
             document.getElementById('confirmado').classList.add('ativo');
+            if (usuarioLogado) document.getElementById('link-minha-conta').style.display = 'inline-block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     </script>

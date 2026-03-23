@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Conta — Elite Barber</title>
+    <script>window.tailwind = { corePlugins: { preflight: false } };</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/minha-conta.css">
+    <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+</head>
+<body>
+
+    <header>
+        <div class="nav-inner">
+            <a href="index.html" class="logo">
+                <span class="logo-nome">Elite Barber</span>
+                <span class="logo-sub">Premium Grooming</span>
+            </a>
+            <nav>
+                <ul id="nav-menu">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="servicos.html">Serviços</a></li>
+                    <li><a href="agendamento.html">Agendamento</a></li>
+                    <li><a href="sobre.html">Sobre</a></li>
+                    <li><a href="contato.html">Contato</a></li>
+                </ul>
+            </nav>
+            <button class="btn-logout" id="btn-logout">Sair</button>
+            <button class="btn-menu-sidebar" id="btn-menu-sidebar">☰ Menu</button>
+        </div>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <span>Elite Barber</span>
+                <span>Premium Grooming</span>
+            </div>
+            <button class="sidebar-fechar" id="sidebar-fechar">✕</button>
+        </div>
+        <ul class="sidebar-nav" id="sidebar-nav">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="servicos.html">Serviços</a></li>
+            <li><a href="agendamento.html">Agendamento</a></li>
+            <li><a href="sobre.html">Sobre</a></li>
+            <li><a href="contato.html">Contato</a></li>
+        </ul>
+        <div class="sidebar-rodape">
+            <a href="agendamento.html">Agendar Agora →</a>
+        </div>
+    </aside>
+
+    <main>
+        <div class="carregando" id="carregando"><p>Carregando...</p></div>
+
+        <div class="conta-container" id="conta-container" style="display:none">
+
+            <div class="perfil-header">
+                <div class="perfil-avatar" id="perfil-avatar">?</div>
+                <div class="perfil-info">
+                    <h1 id="perfil-nome">—</h1>
+                    <p id="perfil-email">—</p>
+                </div>
+                <a href="agendamento.html" class="btn-primario">+ Novo Agendamento</a>
+            </div>
+
+            <div class="secao">
+                <h2 class="secao-titulo-conta">Dados Pessoais</h2>
+                <div class="dados-grid">
+                    <div class="dado-item">
+                        <span class="dado-label">Nome</span>
+                        <span class="dado-valor" id="dado-nome">—</span>
+                    </div>
+                    <div class="dado-item">
+                        <span class="dado-label">E-mail</span>
+                        <span class="dado-valor" id="dado-email">—</span>
+                    </div>
+                    <div class="dado-item">
+                        <span class="dado-label">Telefone</span>
+                        <span class="dado-valor" id="dado-telefone">Não informado</span>
+                    </div>
+                    <div class="dado-item">
+                        <span class="dado-label">Membro desde</span>
+                        <span class="dado-valor" id="dado-criado">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="secao">
+                <h2 class="secao-titulo-conta">Meus Agendamentos</h2>
+                <div id="lista-agendamentos">
+                    <p class="sem-agendamentos">Você ainda não tem agendamentos.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <strong>Elite Barber</strong>
+        <p>Rua Augusta, 1234 — São Paulo, SP &nbsp;|&nbsp; <a href="contato.html">Fale Conosco</a></p>
+        <p style="margin-top:8px;">&copy; 2025 Elite Barber. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="../scripts/nav.js" defer></script>
+    <script type="module">
+        import { observarLogin, buscarDadosUsuario, logout } from '../scripts/auth.js';
+        import { db } from '../scripts/firebaseConfig.js';
+        import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+
+        document.getElementById('btn-logout').addEventListener('click', logout);
+
+        observarLogin(async usuario => {
+            if (!usuario) { window.location.href = 'login.html'; return; }
+
+            const dados = await buscarDadosUsuario(usuario.uid);
+            const nome  = dados?.nome || usuario.displayName || 'Cliente';
+            const email = dados?.email || usuario.email;
+            const tel   = dados?.telefone || 'Não informado';
+            const data  = dados?.criadoEm?.toDate
+                ? dados.criadoEm.toDate().toLocaleDateString('pt-BR') : '—';
+
+            document.getElementById('perfil-avatar').textContent = nome.charAt(0).toUpperCase();
+            document.getElementById('perfil-nome').textContent   = nome;
+            document.getElementById('perfil-email').textContent  = email;
+            document.getElementById('dado-nome').textContent     = nome;
+            document.getElementById('dado-email').textContent    = email;
+            document.getElementById('dado-telefone').textContent = tel;
+            document.getElementById('dado-criado').textContent   = data;
+
+            // Busca agendamentos
+            try {
+                const q    = query(
+                    collection(db, 'agendamentos'),
+                    where('usuarioId', '==', usuario.uid),
+                    orderBy('criadoEm', 'desc')
+                );
+                const snap = await getDocs(q);
+                const lista = document.getElementById('lista-agendamentos');
+
+                if (snap.empty) {
+                    lista.innerHTML = '<p class="sem-agendamentos">Você ainda não tem agendamentos. <a href="agendamento.html">Agendar agora →</a></p>';
+                } else {
+                    lista.innerHTML = '';
+                    snap.forEach(doc => {
+                        const a = doc.data();
+                        lista.innerHTML += `
+                            <div class="card-agendamento">
+                                <div class="agendamento-info">
+                                    <span class="agendamento-servico">${a.servico}</span>
+                                    <span class="agendamento-data">${a.data} às ${a.hora}</span>
+                                </div>
+                                <div class="agendamento-direita">
+                                    <span class="agendamento-valor">${a.valor}</span>
+                                    <span class="agendamento-status status-${a.status}">${a.status}</span>
+                                </div>
+                            </div>`;
+                    });
+                }
+            } catch (e) {
+                console.error('Erro ao buscar agendamentos:', e);
+            }
+
+            document.getElementById('carregando').style.display      = 'none';
+            document.getElementById('conta-container').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
