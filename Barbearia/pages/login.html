@@ -4,8 +4,192 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — Elite Barber</title>
-    <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
-    <link rel="stylesheet" href="../styles/login.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e8e8e8;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        /* Logo */
+        .logo { text-align: center; margin-bottom: 32px; }
+        .logo-nome {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0e0e0e;
+            display: block;
+        }
+        .logo-sub {
+            font-size: 0.58rem;
+            font-weight: 500;
+            letter-spacing: 4px;
+            color: #ac0707;
+            text-transform: uppercase;
+        }
+
+        /* Abas */
+        .abas {
+            display: flex;
+            border-bottom: 1px solid #e8e8e8;
+            margin-bottom: 28px;
+        }
+        .aba {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #aaa;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+            background: none;
+            border-left: none;
+            border-right: none;
+            border-top: none;
+        }
+        .aba.ativa { color: #0e0e0e; border-bottom-color: #ac0707; }
+
+        /* Painéis */
+        .painel { display: none; }
+        .painel.ativo { display: block; }
+
+        /* Erro */
+        .erro-msg {
+            display: none;
+            background: #fff5f5;
+            border: 1px solid #fca5a5;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 0.82rem;
+            color: #b91c1c;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .erro-msg.visivel { display: block; }
+
+        /* Campo */
+        .campo { margin-bottom: 16px; }
+        .campo label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: #6b6b6b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .campo input {
+            width: 100%;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            padding: 11px 14px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.92rem;
+            color: #0e0e0e;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .campo input:focus { border-color: #0e0e0e; }
+
+        /* Botão Google */
+        .btn-google {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            padding: 11px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #0e0e0e;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .btn-google:hover { background: #f5f5f5; border-color: #aaa; }
+
+        /* Divisor */
+        .divisor {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            color: #aaa;
+            font-size: 0.78rem;
+        }
+        .divisor::before, .divisor::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e8e8e8;
+        }
+
+        /* Botão principal */
+        .btn-principal {
+            width: 100%;
+            background: #0e0e0e;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 13px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            margin-top: 4px;
+            transition: opacity 0.2s;
+        }
+        .btn-principal:hover { opacity: 0.78; }
+        .btn-principal:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Link visitante */
+        .link-visitante {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed #e8e8e8;
+            font-size: 0.82rem;
+            color: #aaa;
+            cursor: pointer;
+            transition: color 0.2s;
+            text-decoration: none;
+        }
+        .link-visitante:hover { color: #0e0e0e; }
+
+        @media (max-width: 480px) {
+            .card { padding: 32px 20px; }
+        }
+    </style>
 </head>
 <body>
 
@@ -49,7 +233,6 @@
             </div>
 
             <button class="btn-principal" id="btn-entrar">Entrar</button>
-
             <a class="link-visitante" id="link-visitante">Continuar sem cadastro →</a>
         </div>
 
@@ -92,7 +275,6 @@
     </div>
 
     <script>
-        // Troca de aba (sem Firebase, só CSS)
         function trocarAba(aba) {
             document.getElementById('painel-login').classList.toggle('ativo', aba === 'login');
             document.getElementById('painel-cadastro').classList.toggle('ativo', aba === 'cadastro');
@@ -103,131 +285,138 @@
         }
     </script>
 
-    <!-- Firebase via CDN -->
-    <script type="module">
-        import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-        import { getAuth, onAuthStateChanged,
-                 signInWithEmailAndPassword,
-                 createUserWithEmailAndPassword,
-                 signInWithPopup, GoogleAuthProvider,
-                 updateProfile }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-        import { getFirestore,
-                 doc, setDoc, getDoc,
-                 serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+   <script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged,
+         signInWithEmailAndPassword,
+         createUserWithEmailAndPassword,
+         signInWithPopup, GoogleAuthProvider,
+         updateProfile }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore,
+         doc, setDoc, getDoc,
+         serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-        const app = initializeApp({
-            apiKey:            "AIzaSyASQoUcoY87PZYASqaKqhYtrtroQ0YiHnk",
-            authDomain:        "databasebarbearia.firebaseapp.com",
-            projectId:         "databasebarbearia",
-            storageBucket:     "databasebarbearia.firebasestorage.app",
-            messagingSenderId: "579297265392",
-            appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"
+const app = initializeApp({
+    apiKey:            "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",
+    authDomain:        "barbearia-tcc123.firebaseapp.com",
+    projectId:         "barbearia-tcc123",
+    storageBucket:     "databasebarbearia.firebasestorage.app",
+    messagingSenderId: "579297265392",
+    appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"
+});
+
+const auth     = getAuth(app);
+const db       = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+
+// 🔥 CORREÇÃO DO LOOP
+let jaRedirecionou = false;
+
+onAuthStateChanged(auth, u => {
+    if (u && !jaRedirecionou && sessionStorage.getItem('logout') !== '1') {
+        jaRedirecionou = true;
+        window.location.replace('minha-conta.html');
+    }
+    sessionStorage.removeItem('logout');
+});
+
+
+// Salva usuário no Firestore
+async function salvarUsuario(user, nome = null) {
+    const ref  = doc(db, 'usuarios', user.uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+        await setDoc(ref, {
+            nome:     nome || user.displayName || '',
+            email:    user.email,
+            telefone: '',
+            criadoEm: serverTimestamp()
         });
+    }
+}
 
-        const auth     = getAuth(app);
-        const db       = getFirestore(app);
-        const provider = new GoogleAuthProvider();
+function mostrarErro(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.add('visivel');
+}
 
-        // Redireciona se já logado
-        onAuthStateChanged(auth, u => {
-            if (u) window.location.href = 'minha-conta.html';
-        });
+function traduzir(code) {
+    const erros = {
+        'auth/user-not-found':       'E-mail não encontrado.',
+        'auth/wrong-password':       'Senha incorreta.',
+        'auth/invalid-credential':   'E-mail ou senha incorretos.',
+        'auth/email-already-in-use': 'Este e-mail já está cadastrado.',
+        'auth/weak-password':        'A senha deve ter no mínimo 6 caracteres.',
+        'auth/invalid-email':        'E-mail inválido.',
+        'auth/popup-closed-by-user': 'Login com Google cancelado.',
+        'auth/too-many-requests':    'Muitas tentativas. Tente novamente mais tarde.'
+    };
+    return erros[code] || 'Ocorreu um erro. Tente novamente.';
+}
 
-        // Salva usuário no Firestore
-        async function salvarUsuario(user, nome = null) {
-            const ref  = doc(db, 'usuarios', user.uid);
-            const snap = await getDoc(ref);
-            if (!snap.exists()) {
-                await setDoc(ref, {
-                    nome:     nome || user.displayName || '',
-                    email:    user.email,
-                    telefone: '',
-                    criadoEm: serverTimestamp()
-                });
-            }
-        }
+// LOGIN GOOGLE
+document.getElementById('btn-google-login').addEventListener('click', async () => {
+    try {
+        const r = await signInWithPopup(auth, provider);
+        await salvarUsuario(r.user);
+        window.location.replace('minha-conta.html');
+    } catch (e) { mostrarErro('erro-login', traduzir(e.code)); }
+});
 
-        function mostrarErro(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.classList.add('visivel');
-        }
+document.getElementById('btn-google-cadastro').addEventListener('click', async () => {
+    try {
+        const r = await signInWithPopup(auth, provider);
+        await salvarUsuario(r.user);
+        window.location.replace('minha-conta.html');
+    } catch (e) { mostrarErro('erro-cadastro', traduzir(e.code)); }
+});
 
-        function traduzir(code) {
-            const erros = {
-                'auth/user-not-found':       'E-mail não encontrado.',
-                'auth/wrong-password':       'Senha incorreta.',
-                'auth/invalid-credential':   'E-mail ou senha incorretos.',
-                'auth/email-already-in-use': 'Este e-mail já está cadastrado.',
-                'auth/weak-password':        'A senha deve ter no mínimo 6 caracteres.',
-                'auth/invalid-email':        'E-mail inválido.',
-                'auth/popup-closed-by-user': 'Login com Google cancelado.',
-                'auth/too-many-requests':    'Muitas tentativas. Tente novamente mais tarde.'
-            };
-            return erros[code] || 'Ocorreu um erro. Tente novamente.';
-        }
+// LOGIN EMAIL
+document.getElementById('btn-entrar').addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value.trim();
+    const senha = document.getElementById('login-senha').value;
+    if (!email || !senha) { mostrarErro('erro-login', 'Preencha e-mail e senha.'); return; }
+    document.getElementById('btn-entrar').disabled = true;
+    try {
+        await signInWithEmailAndPassword(auth, email, senha);
+        window.location.replace('minha-conta.html');
+    } catch (e) {
+        mostrarErro('erro-login', traduzir(e.code));
+        document.getElementById('btn-entrar').disabled = false;
+    }
+});
 
-        // ---- LOGIN GOOGLE ----
-        document.getElementById('btn-google-login').addEventListener('click', async () => {
-            try {
-                const r = await signInWithPopup(auth, provider);
-                await salvarUsuario(r.user);
-                window.location.href = 'minha-conta.html';
-            } catch (e) { mostrarErro('erro-login', traduzir(e.code)); }
-        });
+document.getElementById('login-senha').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('btn-entrar').click();
+});
 
-        document.getElementById('btn-google-cadastro').addEventListener('click', async () => {
-            try {
-                const r = await signInWithPopup(auth, provider);
-                await salvarUsuario(r.user);
-                window.location.href = 'minha-conta.html';
-            } catch (e) { mostrarErro('erro-cadastro', traduzir(e.code)); }
-        });
+// CADASTRO EMAIL
+document.getElementById('btn-cadastrar').addEventListener('click', async () => {
+    const nome  = document.getElementById('cadastro-nome').value.trim();
+    const email = document.getElementById('cadastro-email').value.trim();
+    const senha = document.getElementById('cadastro-senha').value;
+    const conf  = document.getElementById('cadastro-conf').value;
+    if (!nome || !email || !senha || !conf) { mostrarErro('erro-cadastro', 'Preencha todos os campos.'); return; }
+    if (senha !== conf)   { mostrarErro('erro-cadastro', 'As senhas não coincidem.'); return; }
+    if (senha.length < 6) { mostrarErro('erro-cadastro', 'A senha deve ter no mínimo 6 caracteres.'); return; }
+    document.getElementById('btn-cadastrar').disabled = true;
+    try {
+        const r = await createUserWithEmailAndPassword(auth, email, senha);
+        await updateProfile(r.user, { displayName: nome });
+        await salvarUsuario(r.user, nome);
+        window.location.replace('minha-conta.html');
+    } catch (e) {
+        mostrarErro('erro-cadastro', traduzir(e.code));
+        document.getElementById('btn-cadastrar').disabled = false;
+    }
+});
 
-        // ---- LOGIN EMAIL ----
-        document.getElementById('btn-entrar').addEventListener('click', async () => {
-            const email = document.getElementById('login-email').value.trim();
-            const senha = document.getElementById('login-senha').value;
-            if (!email || !senha) { mostrarErro('erro-login', 'Preencha e-mail e senha.'); return; }
-            document.getElementById('btn-entrar').disabled = true;
-            try {
-                await signInWithEmailAndPassword(auth, email, senha);
-                window.location.href = 'minha-conta.html';
-            } catch (e) {
-                mostrarErro('erro-login', traduzir(e.code));
-                document.getElementById('btn-entrar').disabled = false;
-            }
-        });
-
-        document.getElementById('login-senha').addEventListener('keydown', e => {
-            if (e.key === 'Enter') document.getElementById('btn-entrar').click();
-        });
-
-        // ---- CADASTRO EMAIL ----
-        document.getElementById('btn-cadastrar').addEventListener('click', async () => {
-            const nome  = document.getElementById('cadastro-nome').value.trim();
-            const email = document.getElementById('cadastro-email').value.trim();
-            const senha = document.getElementById('cadastro-senha').value;
-            const conf  = document.getElementById('cadastro-conf').value;
-            if (!nome || !email || !senha || !conf) { mostrarErro('erro-cadastro', 'Preencha todos os campos.'); return; }
-            if (senha !== conf)   { mostrarErro('erro-cadastro', 'As senhas não coincidem.'); return; }
-            if (senha.length < 6) { mostrarErro('erro-cadastro', 'A senha deve ter no mínimo 6 caracteres.'); return; }
-            document.getElementById('btn-cadastrar').disabled = true;
-            try {
-                const r = await createUserWithEmailAndPassword(auth, email, senha);
-                await updateProfile(r.user, { displayName: nome });
-                await salvarUsuario(r.user, nome);
-                window.location.href = 'minha-conta.html';
-            } catch (e) {
-                mostrarErro('erro-cadastro', traduzir(e.code));
-                document.getElementById('btn-cadastrar').disabled = false;
-            }
-        });
-
-        // ---- CONTINUAR SEM CADASTRO ----
-        document.getElementById('link-visitante').addEventListener('click', () => {
-            window.location.href = 'servicos.html';
-        });
-    </script>
+// VISITANTE
+document.getElementById('link-visitante').addEventListener('click', () => {
+    window.location.href = 'servicos.html';
+});
+</script>
 </body>
 </html>
