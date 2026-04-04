@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="../styles/style.css"> <!-- Estilo Principal -->
     <link rel="stylesheet" href="../styles/contato.css">
     <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('4jOvQhf272LmNzs9d');</script>       /*configurações do emailjs*/
 </head>
 <body>
 
@@ -140,18 +142,51 @@
         <p style="margin-top:8px;">&copy; 2025 Elite Barber. Todos os direitos reservados.</p>
     </footer>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="../nav.js" defer></script>
-    <script>
+    <script src="../scripts/nav.js" defer></script>
+
+<script>
         function enviarMensagem() {
-            const nome = document.getElementById('c-nome').value.trim();
-            const email = document.getElementById('c-email').value.trim();
-            const mensagem = document.getElementById('c-mensagem').value.trim();
+    const nome     = document.getElementById('c-nome').value.trim();
+    const email    = document.getElementById('c-email').value.trim();
+    const telefone = document.getElementById('c-telefone').value.trim();
+    const mensagem = document.getElementById('c-mensagem').value.trim();
 
-            if (!nome || !email || !mensagem) {
-                alert('Por favor, preencha nome, e-mail e mensagem.');
-                return;
-            }
+    if (!nome || !email || !mensagem) {
+        alert('Por favor, preencha nome, e-mail e mensagem.');
+        return;
+    }
 
-            // Aqui você conecta ao seu serviço de envio (ex: Formspree, EmailJS)
-            document.getElementById('msg-sucesso').classList.add('visivel');
-            document.get}
+    // Desabilita o botão enquanto envia
+    const btn = document.querySelector('.btn-enviar');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    emailjs.send('service_abc123', 'template_abc123', {
+        nome:      nome,
+        email:     email,
+        telefone:  telefone || 'Não informado',
+        mensagem:  mensagem
+    })
+    .then(() => {
+        // Limpa os campos
+        document.getElementById('c-nome').value     = '';
+        document.getElementById('c-email').value    = '';
+        document.getElementById('c-telefone').value = '';
+        document.getElementById('c-mensagem').value = '';
+
+        // Mostra sucesso
+        document.getElementById('msg-sucesso').classList.add('visivel');
+        setTimeout(() => {
+            document.getElementById('msg-sucesso').classList.remove('visivel');
+        }, 5000);
+    })
+    .catch((erro) => {
+        console.error('Erro ao enviar:', erro);
+        alert('Erro ao enviar mensagem. Tente novamente.');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = 'Enviar Mensagem →';
+    });
+}
+</script>
