@@ -135,7 +135,7 @@
                     </div>
                     <div class="campo" id="campo-data">
                         <label for="data">📅 Data do Agendamento</label>
-                        <input type="date" id="data">
+                        <input type="date" id="data" id="data">
                         <span class="erro">Por favor, selecione uma data.</span>
                     </div>
                     <p class="titulo-horarios">🕐 Horário Disponível</p>
@@ -227,6 +227,24 @@
         let usuarioLogado = null;
         let confirmarSemLogin = false;
 
+
+
+
+
+        // Bloqueia datas passadas e segundas-feiras
+const inputData = document.getElementById('data');
+const hoje = new Date();
+hoje.setHours(0, 0, 0, 0);
+inputData.min = hoje.toISOString().split('T')[0];
+
+inputData.addEventListener('change', () => {
+    const dataSelecionada = new Date(inputData.value + 'T00:00:00');
+    if (dataSelecionada.getDay() === 1) { // 1 = segunda-feira
+        alert('Não atendemos nas segundas-feiras. Por favor, escolha outro dia.');
+        inputData.value = '';
+    }
+});
+
         // ---- VERIFICA LOGIN E PRÉ-PREENCHE ----
         onAuthStateChanged(auth, async usuario => {
             usuarioLogado = usuario;
@@ -255,7 +273,71 @@
                 slot.classList.add('selecionado');
                 document.getElementById('erro-horario').classList.remove('visivel');
             });
+
+
+
+
+
+        });// ---- SELEÇÃO DE HORÁRIO ----
+document.querySelectorAll('.time-slot').forEach(slot => {
+    slot.addEventListener('click', () => {
+        if (slot.disabled) return;
+        document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selecionado'));
+        slot.classList.add('selecionado');
+        document.getElementById('erro-horario').classList.remove('visivel');
+    });
+});
+
+
+
+
+
+// ---- VERIFICA HORÁRIOS OCUPADOS ----
+async function verificarHorariosOcupados(dataSelecionada) {
+    // Reseta todos os slots
+    document.querySelectorAll('.time-slot').forEach(s => {
+        s.disabled = false;
+        s.classList.remove('selecionado', 'ocupado');
+        s.style.opacity = '1';
+        s.style.cursor = 'pointer';
+        s.style.textDecoration = 'none';
+    });
+
+    if (!dataSelecionada) return;
+
+    try {
+        const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+        const q = query(
+            collection(db, 'agendamentos'),
+            where('data', '==', dataSelecionada)
+        );
+        const snap = await getDocs(q);
+
+        const horariosOcupados = [];
+        snap.forEach(d => horariosOcupados.push(d.data().hora));
+
+        document.querySelectorAll('.time-slot').forEach(slot => {
+            if (horariosOcupados.includes(slot.getAttribute('data-time'))) {  /*verifica se o horário do slot está na lista de horários ocupados*/
+                slot.disabled = true;
+                slot.classList.remove('selecionado');
+                slot.style.opacity = '0.35';
+                slot.style.cursor = 'not-allowed';
+                slot.style.textDecoration = 'line-through';
+            }
         });
+    } catch (e) {
+        console.error('Erro ao verificar horários:', e);
+    }
+}
+
+
+
+
+
+// Chama a verificação sempre que a data mudar
+document.getElementById('data').addEventListener('change', (e) => {
+    verificarHorariosOcupados(e.target.value);
+});
 
         // ---- INDICADOR DE PASSOS ----
         function atualizarIndicador() {
