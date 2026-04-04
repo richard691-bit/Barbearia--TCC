@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <!-- HEADER -->
+<!-- HEADER -->
         <header>
         <div class="nav-inner">
             <a href="index.html" class="logo">
@@ -37,10 +37,13 @@
                     <li><a href="contato.html">Contato</a></li>
                 </ul>
             </nav>
-            <a href="agendamento.html" class="btn-agendar-nav">Agendar Agora</a>
-            <button class="btn-menu-sidebar" id="btn-menu-sidebar">☰ Menu</button>
+          <a href="agendamento.html" class="btn-agendar-nav">Agendar Agora</a>
+<a href="login.html" class="btn-login-nav" id="btn-nav-auth">Login</a>
+<button class="btn-menu-sidebar" id="btn-menu-sidebar">☰ Menu</button>
         </div>
     </header>
+
+
     <!-- SIDEBAR -->
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <aside class="sidebar" id="sidebar">
@@ -165,5 +168,34 @@
     </footer>
 
     <script src="../scripts/nav.js" defer></script>
+
+     <!-- quando estiver logando aparece o botal meu perfeil -->
+    <script type="module">
+    import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+    const app = initializeApp({
+        apiKey:            "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",
+        authDomain:        "barbearia-tcc123.firebaseapp.com",
+        projectId:         "barbearia-tcc123",
+        storageBucket:     "barbearia-tcc123.firebasestorage.app",
+        messagingSenderId: "579297265392",
+        appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"
+    });
+
+    const auth = getAuth(app);
+    const btnAuth = document.getElementById('btn-nav-auth');
+
+    onAuthStateChanged(auth, usuario => {
+        if (usuario) {
+            btnAuth.textContent = 'Minha Conta';
+            btnAuth.href = 'minha-conta.html';
+        } else {
+            btnAuth.textContent = 'Login';
+            btnAuth.href = 'login.html';
+        }
+    });
+</script>
+
 </body>
 </html>

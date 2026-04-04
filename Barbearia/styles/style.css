@@ -427,3 +427,24 @@ footer a:hover { text-decoration: underline; }
     .menu-toggle { display: none !important; }
     .secao-titulo h2 { font-size: 1.7rem; }
 }
+
+.btn-login-nav {
+    background: transparent;
+    color: var(--cinza-medio);
+    font-weight: 500;
+    font-size: 0.78rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: var(--raio);
+    text-decoration: none;
+    border: 1px solid var(--cinza-borda);
+    transition: border-color var(--transicao), color var(--transicao);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btn-login-nav:hover { 
+    border-color: var(--preto); 
+    color: var(--preto); 
+}
