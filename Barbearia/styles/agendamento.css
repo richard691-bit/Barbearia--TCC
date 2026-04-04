@@ -328,3 +328,63 @@
     .grid-horarios { grid-template-columns: repeat(3, 1fr); }
     .step-label { display: none; }
 }
+
+.modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 400;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+        }
+        .modal-overlay.aberto { display: flex; }
+        .modal-card {
+            background: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 12px;
+            padding: 40px 36px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            margin: 20px;
+        }
+        .modal-card .icone { font-size: 2.5rem; margin-bottom: 16px; }
+        .modal-card h3 {
+            font-family: var(--fonte-titulo);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--preto);
+            margin-bottom: 10px;
+        }
+        .modal-card p {
+            color: var(--cinza-medio);
+            font-size: 0.88rem;
+            font-weight: 300;
+            margin-bottom: 28px;
+            line-height: 1.7;
+        }
+        .modal-botoes { display: flex; flex-direction: column; gap: 10px; }
+        .modal-botoes a, .modal-botoes button {
+            display: block; width: 100%;
+            padding: 12px; border-radius: var(--raio);
+            font-family: var(--fonte-corpo);
+            font-size: 0.85rem; font-weight: 500;
+            letter-spacing: 1px; text-transform: uppercase;
+            text-decoration: none; cursor: pointer;
+            transition: opacity 0.2s; text-align: center;
+        }
+        .modal-btn-login { background: var(--preto); color: var(--branco); border: none; }
+        .modal-btn-login:hover { opacity: 0.8; }
+        .modal-btn-visitante {
+            background: transparent; color: var(--cinza-medio);
+            border: 1px dashed var(--cinza-borda);
+        }
+        .modal-btn-visitante:hover { color: var(--preto); border-color: var(--cinza-medio); }
+        .badge-logado {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #f0fdf4; border: 1px solid #b7dfc2;
+            color: #2d6a4f; font-size: 0.75rem; font-weight: 500;
+            padding: 4px 10px; border-radius: 50px; margin-bottom: 16px;
+        }

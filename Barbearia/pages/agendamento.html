@@ -9,68 +9,10 @@
     <link rel="stylesheet" href="../styles/style.css">
     <link rel="stylesheet" href="../styles/agendamento.css">
     <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
-    <style>
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 400;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(3px);
-        }
-        .modal-overlay.aberto { display: flex; }
-        .modal-card {
-            background: var(--branco);
-            border: 1px solid var(--cinza-borda);
-            border-radius: 12px;
-            padding: 40px 36px;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            margin: 20px;
-        }
-        .modal-card .icone { font-size: 2.5rem; margin-bottom: 16px; }
-        .modal-card h3 {
-            font-family: var(--fonte-titulo);
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--preto);
-            margin-bottom: 10px;
-        }
-        .modal-card p {
-            color: var(--cinza-medio);
-            font-size: 0.88rem;
-            font-weight: 300;
-            margin-bottom: 28px;
-            line-height: 1.7;
-        }
-        .modal-botoes { display: flex; flex-direction: column; gap: 10px; }
-        .modal-botoes a, .modal-botoes button {
-            display: block; width: 100%;
-            padding: 12px; border-radius: var(--raio);
-            font-family: var(--fonte-corpo);
-            font-size: 0.85rem; font-weight: 500;
-            letter-spacing: 1px; text-transform: uppercase;
-            text-decoration: none; cursor: pointer;
-            transition: opacity 0.2s; text-align: center;
-        }
-        .modal-btn-login { background: var(--preto); color: var(--branco); border: none; }
-        .modal-btn-login:hover { opacity: 0.8; }
-        .modal-btn-visitante {
-            background: transparent; color: var(--cinza-medio);
-            border: 1px dashed var(--cinza-borda);
-        }
-        .modal-btn-visitante:hover { color: var(--preto); border-color: var(--cinza-medio); }
-        .badge-logado {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: #f0fdf4; border: 1px solid #b7dfc2;
-            color: #2d6a4f; font-size: 0.75rem; font-weight: 500;
-            padding: 4px 10px; border-radius: 50px; margin-bottom: 16px;
-        }
-    </style>
 </head>
+
+
+
 <body>
 
     <header>
@@ -259,33 +201,54 @@
 
     <script src="../scripts/nav.js" defer></script>
     <script type="module">
-        import { observarLogin, buscarDadosUsuario, atualizarTelefone } from '../scripts/auth.js';
-        import { db } from '../scripts/firebaseConfig.js';
-        import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+        // Firebase via CDN — funciona direto no browser sem bundler
+        import { initializeApp }       from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+        import { getAuth,
+                 onAuthStateChanged }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        import { getFirestore, doc,
+                 getDoc, updateDoc,
+                 collection, addDoc,
+                 serverTimestamp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        const app = initializeApp({
+            apiKey:            "AIzaSyASQoUcoY87PZYASqaKqhYtrtroQ0YiHnk",
+            authDomain:        "databasebarbearia.firebaseapp.com",
+            projectId:         "databasebarbearia",
+            storageBucket:     "databasebarbearia.firebasestorage.app",
+            messagingSenderId: "579297265392",
+            appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"
+        });
+
+        const auth = getAuth(app);
+        const db   = getFirestore(app);
 
         let passoAtual = 1;
         const totalPassos = 3;
         let usuarioLogado = null;
         let confirmarSemLogin = false;
 
-        // Verifica login e pré-preenche
-        observarLogin(async usuario => {
+        // ---- VERIFICA LOGIN E PRÉ-PREENCHE ----
+        onAuthStateChanged(auth, async usuario => {
             usuarioLogado = usuario;
             if (!usuario) return;
 
             document.getElementById('badge-logado').style.display = 'block';
             document.getElementById('link-minha-conta').style.display = 'inline-block';
 
-            const dados = await buscarDadosUsuario(usuario.uid);
-            const nome  = dados?.nome || usuario.displayName || '';
-            const tel   = dados?.telefone || '';
-
-            document.getElementById('badge-nome').textContent = nome.split(' ')[0];
-            if (nome) document.getElementById('nome').value = nome;
-            if (tel)  document.getElementById('telefone').value = tel;
+            try {
+                const snap = await getDoc(doc(db, 'usuarios', usuario.uid));
+                const dados = snap.exists() ? snap.data() : {};
+                const nome  = dados.nome || usuario.displayName || '';
+                const tel   = dados.telefone || '';
+                document.getElementById('badge-nome').textContent = nome.split(' ')[0];
+                if (nome) document.getElementById('nome').value = nome;
+                if (tel)  document.getElementById('telefone').value = tel;
+            } catch (e) {
+                console.error('Erro ao buscar dados do usuário:', e);
+            }
         });
 
-        // Seleção de horário
+        // ---- SELEÇÃO DE HORÁRIO ----
         document.querySelectorAll('.time-slot').forEach(slot => {
             slot.addEventListener('click', () => {
                 document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selecionado'));
@@ -294,15 +257,23 @@
             });
         });
 
+        // ---- INDICADOR DE PASSOS ----
         function atualizarIndicador() {
             for (let i = 1; i <= totalPassos; i++) {
                 const circulo = document.getElementById(`circulo-${i}`);
                 const label   = circulo?.nextElementSibling;
                 circulo.classList.remove('ativo', 'concluido');
                 label?.classList.remove('ativo');
-                if (i < passoAtual) { circulo.classList.add('concluido'); circulo.textContent = '✓'; }
-                else if (i === passoAtual) { circulo.classList.add('ativo'); circulo.textContent = i; label?.classList.add('ativo'); }
-                else { circulo.textContent = i; }
+                if (i < passoAtual) {
+                    circulo.classList.add('concluido');
+                    circulo.textContent = '✓';
+                } else if (i === passoAtual) {
+                    circulo.classList.add('ativo');
+                    circulo.textContent = i;
+                    label?.classList.add('ativo');
+                } else {
+                    circulo.textContent = i;
+                }
                 if (i < totalPassos) {
                     document.getElementById(`linha-${i}`)?.classList.toggle('ativa', i < passoAtual);
                 }
@@ -315,6 +286,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // ---- VALIDAÇÕES ----
         function validarPasso1() {
             const nome = document.getElementById('nome');
             const tel  = document.getElementById('telefone');
@@ -337,13 +309,14 @@
             const partes  = document.getElementById('servico').value.split('|');
             const data    = document.getElementById('data').value;
             const horario = document.querySelector('.time-slot.selecionado');
-            document.getElementById('rev-nome').textContent     = document.getElementById('nome').value;
-            document.getElementById('rev-telefone').textContent = document.getElementById('telefone').value;
-            document.getElementById('rev-servico').textContent  = partes[0] || '';
-            document.getElementById('rev-valor').textContent    = partes[1] || '';
+            document.getElementById('rev-nome').textContent      = document.getElementById('nome').value;
+            document.getElementById('rev-telefone').textContent  = document.getElementById('telefone').value;
+            document.getElementById('rev-servico').textContent   = partes[0] || '';
+            document.getElementById('rev-valor').textContent     = partes[1] || '';
             document.getElementById('rev-data-hora').textContent = `${data} às ${horario?.getAttribute('data-time') || ''}`;
         }
 
+        // ---- NAVEGAÇÃO ----
         function irParaPasso(destino) {
             if (destino > passoAtual) {
                 if (passoAtual === 1 && !validarPasso1()) return;
@@ -355,13 +328,12 @@
             mostrarPasso(passoAtual);
         }
 
-        // Botões de navegação
         document.getElementById('btn-prox-1').addEventListener('click', () => irParaPasso(2));
         document.getElementById('btn-prox-2').addEventListener('click', () => irParaPasso(3));
         document.getElementById('btn-volt-2').addEventListener('click', () => irParaPasso(1));
         document.getElementById('btn-volt-3').addEventListener('click', () => irParaPasso(2));
 
-        // Confirmar
+        // ---- CONFIRMAR ----
         document.getElementById('btn-confirmar').addEventListener('click', () => {
             if (!usuarioLogado && !confirmarSemLogin) {
                 document.getElementById('modal-login').classList.add('aberto');
@@ -383,16 +355,18 @@
             }
         });
 
+        // ---- SALVAR NO FIRESTORE ----
         async function salvarAgendamento() {
             const servico  = document.getElementById('rev-servico').textContent;
             const valor    = document.getElementById('rev-valor').textContent;
             const dataHora = document.getElementById('rev-data-hora').textContent;
             const [data, hora] = dataHora.split(' às ');
+            const telefone = document.getElementById('telefone').value;
 
             try {
                 await addDoc(collection(db, 'agendamentos'), {
                     nome:        document.getElementById('nome').value,
-                    telefone:    document.getElementById('telefone').value,
+                    telefone,
                     servico, valor, data, hora,
                     observacoes: document.getElementById('observacoes').value,
                     status:      'confirmado',
@@ -400,13 +374,16 @@
                     usuarioId:   usuarioLogado ? usuarioLogado.uid : null
                 });
 
-                // Atualiza telefone no perfil se estiver logado e campo estiver vazio
-                if (usuarioLogado) {
-                    const telefone = document.getElementById('telefone').value;
-                    await atualizarTelefone(usuarioLogado.uid, telefone);
+                // Atualiza telefone no perfil se logado e telefone ainda estiver vazio
+                if (usuarioLogado && telefone) {
+                    const ref  = doc(db, 'usuarios', usuarioLogado.uid);
+                    const snap = await getDoc(ref);
+                    if (snap.exists() && !snap.data().telefone) {
+                        await updateDoc(ref, { telefone });
+                    }
                 }
             } catch (e) {
-                console.error('Erro ao salvar:', e);
+                console.error('Erro ao salvar agendamento:', e);
             }
 
             document.getElementById('confirm-detalhe').textContent = `${servico} — ${dataHora}`;
