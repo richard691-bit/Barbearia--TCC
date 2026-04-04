@@ -211,13 +211,13 @@
                  serverTimestamp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
         const app = initializeApp({
-            apiKey:            "AIzaSyASQoUcoY87PZYASqaKqhYtrtroQ0YiHnk",
-            authDomain:        "databasebarbearia.firebaseapp.com",
-            projectId:         "databasebarbearia",
-            storageBucket:     "databasebarbearia.firebasestorage.app",
-            messagingSenderId: "579297265392",
-            appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"
-        });
+    apiKey:            "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",  // ✅
+    authDomain:        "barbearia-tcc123.firebaseapp.com",           // ✅
+    projectId:         "barbearia-tcc123",                           // ✅ /*Codigo estava dando conflito, estava com outras configuraçõ<es>*/
+    storageBucket:     "barbearia-tcc123.firebasestorage.app",       // ✅
+    messagingSenderId: "579297265392",
+    appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"   // ✅
+});
 
         const auth = getAuth(app);
         const db   = getFirestore(app);
