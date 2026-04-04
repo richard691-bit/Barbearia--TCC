@@ -1,19 +1,12 @@
-// firebaseConfig.js — Configuração e inicialização do Firebase
- 
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
- 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
 const firebaseConfig = {
-    apiKey: "AIzaSyASQoUcoY87PZYASqaKqhYtrtroQ0YiHnk",
-    authDomain: "databasebarbearia.firebaseapp.com",
-    projectId: "databasebarbearia",
-    storageBucket: "databasebarbearia.firebasestorage.app",
-    messagingSenderId: "579297265392",
-    appId: "1:579297265392:web:3528dfc37a4b29fef8e435"
+  apiKey: "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",
+  authDomain: "barbearia-tcc123.firebaseapp.com",
+  projectId: "barbearia-tcc123",
 };
- 
+
 const app = initializeApp(firebaseConfig);
- 
-export const auth = getAuth(app);
-export const db   = getFirestore(app);
+
+export const db = getFirestore(app);

@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minha Conta — Elite Barber</title>
-    <script>window.tailwind = { corePlugins: { preflight: false } };</script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"> 
+    <link rel="stylesheet" href="../styles/style.css"> <!-- Estilo Principal -->
     <link rel="stylesheet" href="../styles/minha-conta.css">
-    <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+
 </head>
 <body>
 
@@ -41,7 +42,7 @@
             </div>
             <button class="sidebar-fechar" id="sidebar-fechar">✕</button>
         </div>
-        <ul class="sidebar-nav" id="sidebar-nav">
+        <ul class="sidebar-nav">
             <li><a href="index.html">Home</a></li>
             <li><a href="servicos.html">Serviços</a></li>
             <li><a href="agendamento.html">Agendamento</a></li>
@@ -105,20 +106,73 @@
         <p style="margin-top:8px;">&copy; 2025 Elite Barber. Todos os direitos reservados.</p>
     </footer>
 
-    <script src="../scripts/nav.js" defer></script>
+    <!-- Sidebar JS -->
+    <script>
+        const sidebar   = document.getElementById('sidebar');
+        const overlay   = document.getElementById('sidebar-overlay');
+        const btnAbrir  = document.getElementById('btn-menu-sidebar');
+        const btnFechar = document.getElementById('sidebar-fechar');
+
+        function abrirSidebar()  { sidebar.classList.add('aberto');    overlay.classList.add('aberto'); }
+        function fecharSidebar() { sidebar.classList.remove('aberto'); overlay.classList.remove('aberto'); }
+
+        btnAbrir?.addEventListener('click', abrirSidebar);
+        btnFechar?.addEventListener('click', fecharSidebar);
+        overlay?.addEventListener('click', fecharSidebar);
+    </script>
+
+    <!-- Firebase -->
     <script type="module">
-        import { observarLogin, buscarDadosUsuario, logout } from '../scripts/auth.js';
-        import { db } from '../scripts/firebaseConfig.js';
-        import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+        import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut }
+                                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        import { getFirestore, doc, getDoc,
+                 collection, query, where, orderBy, getDocs }
+                                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-        document.getElementById('btn-logout').addEventListener('click', logout);
+        const app = initializeApp({
+            apiKey: "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",
+            authDomain: "barbearia-tcc123.firebaseapp.com",
+            projectId: "barbearia-tcc123",
+            storageBucket:    "barbearia-tcc123.firebasestorage.app",
+            messagingSenderId: "670662595306",
+            appId:             "1:670662595306:web:f9c46dceed9c7341ecfd93"
+        });
 
-        observarLogin(async usuario => {
-            if (!usuario) { window.location.href = 'login.html'; return; }
+        const auth = getAuth(app);
+        const db   = getFirestore(app);
 
-            const dados = await buscarDadosUsuario(usuario.uid);
-            const nome  = dados?.nome || usuario.displayName || 'Cliente';
-            const email = dados?.email || usuario.email;
+        // Flag para evitar loop durante o logout
+        let saindo = false;
+
+        // Logout
+        document.getElementById('btn-logout').addEventListener('click', async () => {
+            saindo = true;
+            sessionStorage.setItem('logout', '1');
+            await signOut(auth);
+            window.location.href = 'login.html';
+        });
+
+        // Observa autenticação
+        onAuthStateChanged(auth, async usuario => {
+            if (!usuario) {
+               if (!usuario) {
+                window.location.replace('login.html');
+                return;
+}
+            }
+
+            // Busca dados do Firestore
+            let dados = {};
+            try {
+                const snap = await getDoc(doc(db, 'usuarios', usuario.uid));
+                if (snap.exists()) dados = snap.data();
+            } catch (e) {
+                console.error('Erro ao buscar usuário:', e);
+            }
+
+            const nome  = dados?.nome     || usuario.displayName || 'Cliente';
+            const email = dados?.email    || usuario.email        || '—';
             const tel   = dados?.telefone || 'Não informado';
             const data  = dados?.criadoEm?.toDate
                 ? dados.criadoEm.toDate().toLocaleDateString('pt-BR') : '—';
@@ -133,29 +187,30 @@
 
             // Busca agendamentos
             try {
-                const q    = query(
+                const q     = query(
                     collection(db, 'agendamentos'),
                     where('usuarioId', '==', usuario.uid),
                     orderBy('criadoEm', 'desc')
                 );
-                const snap = await getDocs(q);
+                const snaps = await getDocs(q);
                 const lista = document.getElementById('lista-agendamentos');
 
-                if (snap.empty) {
+                if (snaps.empty) {
                     lista.innerHTML = '<p class="sem-agendamentos">Você ainda não tem agendamentos. <a href="agendamento.html">Agendar agora →</a></p>';
                 } else {
                     lista.innerHTML = '';
-                    snap.forEach(doc => {
-                        const a = doc.data();
+                    snaps.forEach(d => {
+                        const a = d.data();
+                        const statusClass = (a.status || 'pendente').toLowerCase();
                         lista.innerHTML += `
                             <div class="card-agendamento">
                                 <div class="agendamento-info">
-                                    <span class="agendamento-servico">${a.servico}</span>
-                                    <span class="agendamento-data">${a.data} às ${a.hora}</span>
+                                    <span class="agendamento-servico">${a.servico || '—'}</span>
+                                    <span class="agendamento-data">${a.data || '—'} às ${a.hora || '—'}</span>
                                 </div>
                                 <div class="agendamento-direita">
-                                    <span class="agendamento-valor">${a.valor}</span>
-                                    <span class="agendamento-status status-${a.status}">${a.status}</span>
+                                    <span class="agendamento-valor">${a.valor || '—'}</span>
+                                    <span class="agendamento-status status-${statusClass}">${a.status || 'pendente'}</span>
                                 </div>
                             </div>`;
                     });

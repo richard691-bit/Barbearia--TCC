@@ -1,141 +1,419 @@
-/* =============================================
-   minha-conta.css — Área do Cliente
-   ============================================= */
+/* ---- VARIÁVEIS ---- */
+        :root {
+            --amarelo:        #ac0707;
+            --amarelo-claro:  #9b0000;
+            --preto:          #0e0e0e;
+            --cinza-escuro:   #1c1c1c;
+            --cinza-medio:    #413f3f;
+            --cinza-borda:    #e9e4e4;
+            --cinza-fundo:    #ffffff;
+            --branco:         #eeecec;
+            --fonte-titulo:   'Cormorant Garamond', serif;
+            --fonte-corpo:    'Outfit', sans-serif;
+            --raio:           6px;
+            --transicao:      0.2s ease;
+        }
 
-.carregando {
-    min-height: calc(100vh - 68px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--cinza-medio);
-    font-size: 0.9rem;
-    font-weight: 300;
-}
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
 
-.conta-container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 64px 32px 96px;
-}
+        body {
+            font-family: var(--fonte-corpo);
+            font-weight: 400;
+            background: var(--branco);
+            color: var(--preto);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-.perfil-header {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    padding-bottom: 40px;
-    border-bottom: 1px solid var(--cinza-borda);
-    margin-bottom: 48px;
-    flex-wrap: wrap;
-}
+        img { display: block; max-width: 100%; }
 
-.perfil-avatar {
-    width: 64px; height: 64px;
-    border-radius: 50%;
-    background: var(--preto);
-    color: var(--branco);
-    font-family: var(--fonte-titulo);
-    font-size: 1.8rem;
-    font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-}
+        /* ---- HEADER ---- */
+        header {
+            background: var(--branco);
+            border-bottom: 1px solid var(--cinza-borda);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-.perfil-info { flex: 1; }
-.perfil-info h1 {
-    font-family: var(--fonte-titulo);
-    font-size: 1.6rem; font-weight: 700;
-    color: var(--preto); margin-bottom: 4px;
-}
-.perfil-info p {
-    font-size: 0.88rem; color: var(--cinza-medio); font-weight: 300;
-}
+        .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 32px;
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 32px;
+        }
 
-.secao { margin-bottom: 48px; }
+        .logo {
+            display: flex;
+            flex-direction: column;
+            line-height: 1;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
 
-.secao-titulo-conta {
-    font-family: var(--fonte-titulo);
-    font-size: 1.3rem; font-weight: 700;
-    color: var(--preto); margin-bottom: 20px;
-    padding-bottom: 12px; border-bottom: 1px solid var(--cinza-borda);
-}
+        .logo-nome {
+            font-family: var(--fonte-titulo);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--preto);
+            letter-spacing: 0.5px;
+        }
 
-.dados-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1px;
-    border: 1px solid var(--cinza-borda);
-    border-radius: 8px; overflow: hidden;
-}
+        .logo-sub {
+            font-size: 0.58rem;
+            font-weight: 500;
+            letter-spacing: 4px;
+            color: var(--amarelo);
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
 
-.dado-item {
-    background: var(--branco);
-    padding: 20px 24px;
-    border-right: 1px solid var(--cinza-borda);
-    transition: background var(--transicao);
-}
-.dado-item:last-child { border-right: none; }
-.dado-item:hover { background: var(--cinza-fundo); }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 32px;
+        }
 
-.dado-label {
-    display: block; font-size: 0.7rem; font-weight: 500;
-    color: var(--cinza-medio); text-transform: uppercase;
-    letter-spacing: 1px; margin-bottom: 6px;
-}
-.dado-valor { font-size: 0.92rem; color: var(--preto); }
+        nav ul a {
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--cinza-medio);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            transition: color var(--transicao);
+            position: relative;
+            padding-bottom: 3px;
+        }
 
-.sem-agendamentos {
-    font-size: 0.88rem; color: var(--cinza-medio); font-weight: 300;
-    padding: 24px; border: 1px dashed var(--cinza-borda);
-    border-radius: 8px; text-align: center;
-}
-.sem-agendamentos a {
-    color: var(--preto); font-weight: 500; text-decoration: none;
-    border-bottom: 1px solid var(--cinza-borda);
-}
+        nav ul a::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 0; height: 1px;
+            background: var(--amarelo);
+            transition: width 0.3s ease;
+        }
 
-.card-agendamento {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 18px 24px; border: 1px solid var(--cinza-borda);
-    border-radius: 8px; margin-bottom: 10px;
-    background: var(--branco); transition: background var(--transicao);
-}
-.card-agendamento:hover { background: var(--cinza-fundo); }
+        nav ul a:hover { color: var(--preto); }
+        nav ul a:hover::after { width: 100%; }
 
-.agendamento-info { display: flex; flex-direction: column; gap: 4px; }
-.agendamento-servico { font-size: 0.92rem; font-weight: 600; color: var(--preto); }
-.agendamento-data { font-size: 0.8rem; color: var(--cinza-medio); font-weight: 300; }
+        .btn-logout {
+            background: none;
+            border: 1px solid var(--cinza-borda);
+            border-radius: var(--raio);
+            padding: 7px 16px;
+            font-family: var(--fonte-corpo);
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--cinza-medio);
+            cursor: pointer;
+            transition: border-color var(--transicao), color var(--transicao);
+        }
+        .btn-logout:hover { border-color: var(--preto); color: var(--preto); }
 
-.agendamento-direita { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-.agendamento-valor { font-size: 0.92rem; font-weight: 600; color: var(--preto); }
+        .btn-menu-sidebar {
+            display: none;
+            background: none;
+            border: 1px solid var(--cinza-borda);
+            border-radius: var(--raio);
+            padding: 7px 14px;
+            font-family: var(--fonte-corpo);
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--cinza-medio);
+            cursor: pointer;
+            transition: border-color var(--transicao), color var(--transicao);
+        }
+        .btn-menu-sidebar:hover { border-color: var(--preto); color: var(--preto); }
 
-.agendamento-status {
-    font-size: 0.7rem; font-weight: 500;
-    letter-spacing: 1px; text-transform: uppercase;
-    padding: 3px 10px; border-radius: 50px;
-}
-.status-confirmado { background: #f0fdf4; color: #166534; }
-.status-pendente   { background: #fffbeb; color: #92400e; }
-.status-cancelado  { background: #fff5f5; color: #991b1b; }
+        /* ---- SIDEBAR ---- */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.3s;
+            backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.aberto { display: block; opacity: 1; }
 
-.btn-logout {
-    background: none;
-    border: 1px solid var(--cinza-borda);
-    border-radius: var(--raio);
-    padding: 7px 16px;
-    font-family: var(--fonte-corpo);
-    font-size: 0.78rem; font-weight: 500;
-    letter-spacing: 1px; text-transform: uppercase;
-    color: var(--cinza-medio); cursor: pointer;
-    transition: border-color var(--transicao), color var(--transicao);
-}
-.btn-logout:hover { border-color: var(--preto); color: var(--preto); }
+        .sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: 260px;
+            height: 100vh;
+            background: var(--preto);
+            z-index: 300;
+            transform: translateX(-100%);
+            transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar.aberto { transform: translateX(0); }
 
-@media (max-width: 768px) {
-    .conta-container { padding: 40px 20px 64px; }
-    .dados-grid { grid-template-columns: 1fr 1fr; }
-    .dado-item { border-right: none; border-bottom: 1px solid var(--cinza-borda); }
-    .dado-item:last-child { border-bottom: none; }
-    .card-agendamento { flex-direction: column; align-items: flex-start; gap: 12px; }
-    .agendamento-direita { align-items: flex-start; }
-    .perfil-header .btn-primario { width: 100%; text-align: center; }
-}
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 28px 24px;
+            border-bottom: 1px solid #1e1e1e;
+        }
+
+        .sidebar-logo { display: flex; flex-direction: column; line-height: 1.1; }
+        .sidebar-logo span:first-child {
+            font-family: var(--fonte-titulo);
+            font-size: 1.15rem;
+            color: var(--branco);
+            font-weight: 700;
+        }
+        .sidebar-logo span:last-child {
+            font-size: 0.5rem;
+            font-weight: 500;
+            letter-spacing: 3px;
+            color: var(--amarelo);
+            text-transform: uppercase;
+            margin-top: 3px;
+        }
+
+        .sidebar-fechar {
+            background: none;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
+            color: var(--cinza-medio);
+            font-size: 1rem;
+            width: 32px; height: 32px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: color var(--transicao), border-color var(--transicao);
+        }
+        .sidebar-fechar:hover { color: var(--branco); border-color: #444; }
+
+        .sidebar-nav {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 16px 0;
+        }
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            padding: 13px 24px;
+            text-decoration: none;
+            color: rgba(255,255,255,0.4);
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-left: 2px solid transparent;
+            transition: color var(--transicao), border-color var(--transicao);
+        }
+        .sidebar-nav li a:hover { color: var(--branco); border-left-color: var(--amarelo); }
+
+        .sidebar-rodape {
+            padding: 20px 24px 32px;
+            border-top: 1px solid #1e1e1e;
+        }
+        .sidebar-rodape a {
+            display: block;
+            text-align: center;
+            background: var(--amarelo);
+            color: var(--preto);
+            font-weight: 600;
+            font-size: 0.78rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 12px;
+            border-radius: var(--raio);
+            text-decoration: none;
+            transition: opacity var(--transicao);
+        }
+        .sidebar-rodape a:hover { opacity: 0.85; }
+
+        /* ---- MAIN ---- */
+        main { flex: 1; }
+
+        /* ---- MINHA CONTA ---- */
+        .carregando {
+            min-height: calc(100vh - 68px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--cinza-medio);
+            font-size: 0.9rem;
+            font-weight: 300;
+        }
+
+        .conta-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 64px 32px 96px;
+        }
+
+        .perfil-header {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid var(--cinza-borda);
+            margin-bottom: 48px;
+            flex-wrap: wrap;
+        }
+
+        .perfil-avatar {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: var(--preto);
+            color: var(--branco);
+            font-family: var(--fonte-titulo);
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .perfil-info { flex: 1; }
+        .perfil-info h1 {
+            font-family: var(--fonte-titulo);
+            font-size: 1.6rem; font-weight: 700;
+            color: var(--preto); margin-bottom: 4px;
+        }
+        .perfil-info p {
+            font-size: 0.88rem; color: var(--cinza-medio); font-weight: 300;
+        }
+
+        .btn-primario {
+            display: inline-block;
+            background: var(--amarelo);
+            color: var(--preto);
+            font-family: var(--fonte-corpo);
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 14px 36px;
+            border-radius: var(--raio);
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: opacity var(--transicao), transform var(--transicao);
+        }
+        .btn-primario:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        .secao { margin-bottom: 48px; }
+
+        .secao-titulo-conta {
+            font-family: var(--fonte-titulo);
+            font-size: 1.3rem; font-weight: 700;
+            color: var(--preto); margin-bottom: 20px;
+            padding-bottom: 12px; border-bottom: 1px solid var(--cinza-borda);
+        }
+
+        .dados-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1px;
+            border: 1px solid var(--cinza-borda);
+            border-radius: 8px; overflow: hidden;
+        }
+
+        .dado-item {
+            background: var(--branco);
+            padding: 20px 24px;
+            border-right: 1px solid var(--cinza-borda);
+            transition: background var(--transicao);
+        }
+        .dado-item:last-child { border-right: none; }
+        .dado-item:hover { background: var(--cinza-fundo); }
+
+        .dado-label {
+            display: block; font-size: 0.7rem; font-weight: 500;
+            color: var(--cinza-medio); text-transform: uppercase;
+            letter-spacing: 1px; margin-bottom: 6px;
+        }
+        .dado-valor { font-size: 0.92rem; color: var(--preto); }
+
+        .sem-agendamentos {
+            font-size: 0.88rem; color: var(--cinza-medio); font-weight: 300;
+            padding: 24px; border: 1px dashed var(--cinza-borda);
+            border-radius: 8px; text-align: center;
+        }
+        .sem-agendamentos a {
+            color: var(--preto); font-weight: 500; text-decoration: none;
+            border-bottom: 1px solid var(--cinza-borda);
+        }
+
+        .card-agendamento {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 24px; border: 1px solid var(--cinza-borda);
+            border-radius: 8px; margin-bottom: 10px;
+            background: var(--branco); transition: background var(--transicao);
+        }
+        .card-agendamento:hover { background: var(--cinza-fundo); }
+
+        .agendamento-info { display: flex; flex-direction: column; gap: 4px; }
+        .agendamento-servico { font-size: 0.92rem; font-weight: 600; color: var(--preto); }
+        .agendamento-data { font-size: 0.8rem; color: var(--cinza-medio); font-weight: 300; }
+
+        .agendamento-direita { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+        .agendamento-valor { font-size: 0.92rem; font-weight: 600; color: var(--preto); }
+
+        .agendamento-status {
+            font-size: 0.7rem; font-weight: 500;
+            letter-spacing: 1px; text-transform: uppercase;
+            padding: 3px 10px; border-radius: 50px;
+        }
+        .status-confirmado { background: #f0fdf4; color: #166534; }
+        .status-pendente   { background: #fffbeb; color: #92400e; }
+        .status-cancelado  { background: #fff5f5; color: #991b1b; }
+
+        /* ---- FOOTER ---- */
+        footer {
+            background: var(--preto);
+            color: var(--cinza-medio);
+            text-align: center;
+            padding: 48px 24px;
+            font-size: 0.82rem;
+            letter-spacing: 0.5px;
+        }
+        footer strong {
+            display: block;
+            font-family: var(--fonte-titulo);
+            font-size: 1.3rem;
+            color: var(--branco);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+        footer p { line-height: 2; }
+        footer a { color: var(--amarelo-claro); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* ---- RESPONSIVO ---- */
+        @media (max-width: 768px) {
+            .nav-inner { padding: 0 20px; }
+            nav ul { display: none; }
+            .btn-logout { display: none; }
+            .btn-menu-sidebar { display: block; }
+            .conta-container { padding: 40px 20px 64px; }
+            .dados-grid { grid-template-columns: 1fr 1fr; }
+            .dado-item { border-right: none; border-bottom: 1px solid var(--cinza-borda); }
+            .dado-item:last-child { border-bottom: none; }
+            .card-agendamento { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .agendamento-direita { align-items: flex-start; }
+            .perfil-header .btn-primario { width: 100%; text-align: center; }
+        }

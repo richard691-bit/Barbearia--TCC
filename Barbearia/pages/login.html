@@ -91,8 +91,7 @@
 
     </div>
 
-    <script>
-        // Troca de aba (sem Firebase, só CSS)
+     <script>
         function trocarAba(aba) {
             document.getElementById('painel-login').classList.toggle('ativo', aba === 'login');
             document.getElementById('painel-cadastro').classList.toggle('ativo', aba === 'cadastro');
@@ -103,131 +102,138 @@
         }
     </script>
 
-    <!-- Firebase via CDN -->
-    <script type="module">
-        import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-        import { getAuth, onAuthStateChanged,
-                 signInWithEmailAndPassword,
-                 createUserWithEmailAndPassword,
-                 signInWithPopup, GoogleAuthProvider,
-                 updateProfile }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-        import { getFirestore,
-                 doc, setDoc, getDoc,
-                 serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+   <script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged,
+         signInWithEmailAndPassword,
+         createUserWithEmailAndPassword,
+         signInWithPopup, GoogleAuthProvider,
+         updateProfile }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore,
+         doc, setDoc, getDoc,
+         serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-        const app = initializeApp({
-            apiKey:            "AIzaSyASQoUcoY87PZYASqaKqhYtrtroQ0YiHnk",
-            authDomain:        "databasebarbearia.firebaseapp.com",
-            projectId:         "databasebarbearia",
-            storageBucket:     "databasebarbearia.firebasestorage.app",
-            messagingSenderId: "579297265392",
-            appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"
+const app = initializeApp({
+    apiKey:            "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",
+    authDomain:        "barbearia-tcc123.firebaseapp.com",
+    projectId:         "barbearia-tcc123",
+    storageBucket:     "databasebarbearia.firebasestorage.app",
+    messagingSenderId: "579297265392",
+    appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"
+});
+
+const auth     = getAuth(app);
+const db       = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+
+// 🔥 CORREÇÃO DO LOOP
+let jaRedirecionou = false;
+
+onAuthStateChanged(auth, u => {
+    if (u && !jaRedirecionou && sessionStorage.getItem('logout') !== '1') {
+        jaRedirecionou = true;
+        window.location.replace('minha-conta.html');
+    }
+    sessionStorage.removeItem('logout');
+});
+
+
+// Salva usuário no Firestore
+async function salvarUsuario(user, nome = null) {
+    const ref  = doc(db, 'usuarios', user.uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+        await setDoc(ref, {
+            nome:     nome || user.displayName || '',
+            email:    user.email,
+            telefone: '',
+            criadoEm: serverTimestamp()
         });
+    }
+}
 
-        const auth     = getAuth(app);
-        const db       = getFirestore(app);
-        const provider = new GoogleAuthProvider();
+function mostrarErro(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.add('visivel');
+}
 
-        // Redireciona se já logado
-        onAuthStateChanged(auth, u => {
-            if (u) window.location.href = 'minha-conta.html';
-        });
+function traduzir(code) {
+    const erros = {
+        'auth/user-not-found':       'E-mail não encontrado.',
+        'auth/wrong-password':       'Senha incorreta.',
+        'auth/invalid-credential':   'E-mail ou senha incorretos.',
+        'auth/email-already-in-use': 'Este e-mail já está cadastrado.',
+        'auth/weak-password':        'A senha deve ter no mínimo 6 caracteres.',
+        'auth/invalid-email':        'E-mail inválido.',
+        'auth/popup-closed-by-user': 'Login com Google cancelado.',
+        'auth/too-many-requests':    'Muitas tentativas. Tente novamente mais tarde.'
+    };
+    return erros[code] || 'Ocorreu um erro. Tente novamente.';
+}
 
-        // Salva usuário no Firestore
-        async function salvarUsuario(user, nome = null) {
-            const ref  = doc(db, 'usuarios', user.uid);
-            const snap = await getDoc(ref);
-            if (!snap.exists()) {
-                await setDoc(ref, {
-                    nome:     nome || user.displayName || '',
-                    email:    user.email,
-                    telefone: '',
-                    criadoEm: serverTimestamp()
-                });
-            }
-        }
+// LOGIN GOOGLE
+document.getElementById('btn-google-login').addEventListener('click', async () => {
+    try {
+        const r = await signInWithPopup(auth, provider);
+        await salvarUsuario(r.user);
+        window.location.replace('minha-conta.html');
+    } catch (e) { mostrarErro('erro-login', traduzir(e.code)); }
+});
 
-        function mostrarErro(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.classList.add('visivel');
-        }
+document.getElementById('btn-google-cadastro').addEventListener('click', async () => {
+    try {
+        const r = await signInWithPopup(auth, provider);
+        await salvarUsuario(r.user);
+        window.location.replace('minha-conta.html');
+    } catch (e) { mostrarErro('erro-cadastro', traduzir(e.code)); }
+});
 
-        function traduzir(code) {
-            const erros = {
-                'auth/user-not-found':       'E-mail não encontrado.',
-                'auth/wrong-password':       'Senha incorreta.',
-                'auth/invalid-credential':   'E-mail ou senha incorretos.',
-                'auth/email-already-in-use': 'Este e-mail já está cadastrado.',
-                'auth/weak-password':        'A senha deve ter no mínimo 6 caracteres.',
-                'auth/invalid-email':        'E-mail inválido.',
-                'auth/popup-closed-by-user': 'Login com Google cancelado.',
-                'auth/too-many-requests':    'Muitas tentativas. Tente novamente mais tarde.'
-            };
-            return erros[code] || 'Ocorreu um erro. Tente novamente.';
-        }
+// LOGIN EMAIL
+document.getElementById('btn-entrar').addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value.trim();
+    const senha = document.getElementById('login-senha').value;
+    if (!email || !senha) { mostrarErro('erro-login', 'Preencha e-mail e senha.'); return; }
+    document.getElementById('btn-entrar').disabled = true;
+    try {
+        await signInWithEmailAndPassword(auth, email, senha);
+        window.location.replace('minha-conta.html');
+    } catch (e) {
+        mostrarErro('erro-login', traduzir(e.code));
+        document.getElementById('btn-entrar').disabled = false;
+    }
+});
 
-        // ---- LOGIN GOOGLE ----
-        document.getElementById('btn-google-login').addEventListener('click', async () => {
-            try {
-                const r = await signInWithPopup(auth, provider);
-                await salvarUsuario(r.user);
-                window.location.href = 'minha-conta.html';
-            } catch (e) { mostrarErro('erro-login', traduzir(e.code)); }
-        });
+document.getElementById('login-senha').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('btn-entrar').click();
+});
 
-        document.getElementById('btn-google-cadastro').addEventListener('click', async () => {
-            try {
-                const r = await signInWithPopup(auth, provider);
-                await salvarUsuario(r.user);
-                window.location.href = 'minha-conta.html';
-            } catch (e) { mostrarErro('erro-cadastro', traduzir(e.code)); }
-        });
+// CADASTRO EMAIL
+document.getElementById('btn-cadastrar').addEventListener('click', async () => {
+    const nome  = document.getElementById('cadastro-nome').value.trim();
+    const email = document.getElementById('cadastro-email').value.trim();
+    const senha = document.getElementById('cadastro-senha').value;
+    const conf  = document.getElementById('cadastro-conf').value;
+    if (!nome || !email || !senha || !conf) { mostrarErro('erro-cadastro', 'Preencha todos os campos.'); return; }
+    if (senha !== conf)   { mostrarErro('erro-cadastro', 'As senhas não coincidem.'); return; }
+    if (senha.length < 6) { mostrarErro('erro-cadastro', 'A senha deve ter no mínimo 6 caracteres.'); return; }
+    document.getElementById('btn-cadastrar').disabled = true;
+    try {
+        const r = await createUserWithEmailAndPassword(auth, email, senha);
+        await updateProfile(r.user, { displayName: nome });
+        await salvarUsuario(r.user, nome);
+        window.location.replace('minha-conta.html');
+    } catch (e) {
+        mostrarErro('erro-cadastro', traduzir(e.code));
+        document.getElementById('btn-cadastrar').disabled = false;
+    }
+});
 
-        // ---- LOGIN EMAIL ----
-        document.getElementById('btn-entrar').addEventListener('click', async () => {
-            const email = document.getElementById('login-email').value.trim();
-            const senha = document.getElementById('login-senha').value;
-            if (!email || !senha) { mostrarErro('erro-login', 'Preencha e-mail e senha.'); return; }
-            document.getElementById('btn-entrar').disabled = true;
-            try {
-                await signInWithEmailAndPassword(auth, email, senha);
-                window.location.href = 'minha-conta.html';
-            } catch (e) {
-                mostrarErro('erro-login', traduzir(e.code));
-                document.getElementById('btn-entrar').disabled = false;
-            }
-        });
-
-        document.getElementById('login-senha').addEventListener('keydown', e => {
-            if (e.key === 'Enter') document.getElementById('btn-entrar').click();
-        });
-
-        // ---- CADASTRO EMAIL ----
-        document.getElementById('btn-cadastrar').addEventListener('click', async () => {
-            const nome  = document.getElementById('cadastro-nome').value.trim();
-            const email = document.getElementById('cadastro-email').value.trim();
-            const senha = document.getElementById('cadastro-senha').value;
-            const conf  = document.getElementById('cadastro-conf').value;
-            if (!nome || !email || !senha || !conf) { mostrarErro('erro-cadastro', 'Preencha todos os campos.'); return; }
-            if (senha !== conf)   { mostrarErro('erro-cadastro', 'As senhas não coincidem.'); return; }
-            if (senha.length < 6) { mostrarErro('erro-cadastro', 'A senha deve ter no mínimo 6 caracteres.'); return; }
-            document.getElementById('btn-cadastrar').disabled = true;
-            try {
-                const r = await createUserWithEmailAndPassword(auth, email, senha);
-                await updateProfile(r.user, { displayName: nome });
-                await salvarUsuario(r.user, nome);
-                window.location.href = 'minha-conta.html';
-            } catch (e) {
-                mostrarErro('erro-cadastro', traduzir(e.code));
-                document.getElementById('btn-cadastrar').disabled = false;
-            }
-        });
-
-        // ---- CONTINUAR SEM CADASTRO ----
-        document.getElementById('link-visitante').addEventListener('click', () => {
-            window.location.href = 'servicos.html';
-        });
-    </script>
+// VISITANTE
+document.getElementById('link-visitante').addEventListener('click', () => {
+    window.location.href = 'servicos.html';
+});
+</script>
 </body>
 </html>
