@@ -1,0 +1,15 @@
+Fazer componentes!
+
+1 - Separar o componente de botão em um arquivo separado dentro do projeto calculadora;
+
+2 - Criar um novo projeto e nele construir os seguintes componentes visando a construção de uma aplicação qualquer:
+	- Input
+	- Botão ( cor, texto, função )
+	- Tabela
+	- Modal
+		+ Precisam ter nomes semânticos nos estados! Ex: BotaoConfirmacao, BotaoCancelar...
+		+ Ter estilo próprio
+
+
+undaia
+	
