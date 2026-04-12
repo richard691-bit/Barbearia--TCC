@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Conta — Elite Barber</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+     <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+    <link rel="stylesheet" href="../styles/style.css"> <!-- Estilo Principal -->
+    <link rel="stylesheet" href="../styles/painel.css"> <!-- Estilo Específico do Painel -->
+
+</head>
+<body>
+
+    <header>
+        <div class="nav-inner">
+            <a href="index.html" class="logo">
+                <span class="logo-nome">Elite Barber</span>
+                <span class="logo-sub">Premium Grooming</span>
+            </a>
+            <nav>
+                <ul id="nav-menu">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="servicos.html">Serviços</a></li>
+                    <li><a href="agendamento.html">Agendamento</a></li>
+                    <li><a href="sobre.html">Sobre</a></li>
+                    <li><a href="contato.html">Contato</a></li>
+                </ul>
+            </nav>
+            <a href="painel.html" class="btn-agendar-nav">Painel Admin</a>
+            <button class="btn-menu-sidebar" id="btn-menu-sidebar">☰ Menu</button>
+        </div>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <span>Elite Barber</span>
+                <span>Premium Grooming</span>
+            </div>
+            <button class="sidebar-fechar" id="sidebar-fechar">✕</button>
+        </div>
+        <ul class="sidebar-nav" id="sidebar-nav">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="servicos.html">Serviços</a></li>
+            <li><a href="agendamento.html">Agendamento</a></li>
+            <li><a href="sobre.html">Sobre</a></li>
+            <li><a href="contato.html">Contato</a></li>
+        </ul>
+        <div class="sidebar-rodape">
+            <a href="agendamento.html">Agendar Agora →</a>
+        </div>
+    </aside>
+
+    <main>
+        <div class="carregando-painel" id="carregando">Verificando acesso...</div>
+
+        <div class="painel-container" id="painel-container" style="display:none">
+
+            <div class="painel-header">
+                <div>
+                    <h1>Painel do Barbeiro</h1>
+                    <p id="data-hoje"></p>
+                </div>
+                <button class="btn-login-nav" id="btn-logout-painel">Sair</button>
+            </div>
+
+            <!-- ABAS -->
+            <div class="abas-painel">
+                <button class="aba-painel ativa" onclick="trocarAba('hoje')">📅 Hoje</button>
+                <button class="aba-painel" onclick="trocarAba('historico')">📋 Histórico</button>
+            </div>
+
+            <!-- ABA HOJE -->
+            <div class="conteudo-aba ativo" id="aba-hoje">
+                <div class="resumo-dia">
+                    <div class="resumo-card">
+                        <span class="numero" id="total-hoje">0</span>
+                        <span class="label">Agendamentos</span>
+                    </div>
+                    <div class="resumo-card">
+                        <span class="numero" id="total-confirmados">0</span>
+                        <span class="label">Confirmados</span>
+                    </div>
+                    <div class="resumo-card">
+                        <span class="numero" id="total-pendentes">0</span>
+                        <span class="label">Pendentes</span>
+                    </div>
+                    <div class="resumo-card">
+                        <span class="numero" id="total-faturamento">R$0</span>
+                        <span class="label">Faturamento</span>
+                    </div>
+                </div>
+
+                <h2 class="secao-titulo-painel">Agendamentos de Hoje</h2>
+                <div id="lista-hoje"><div class="carregando-painel">Carregando...</div></div>
+            </div>
+
+            <!-- ABA HISTÓRICO -->
+            <div class="conteudo-aba" id="aba-historico">
+                <div class="filtro-historico">
+                    <input type="date" id="filtro-data" placeholder="Filtrar por data">
+                    <select id="filtro-status">
+                        <option value="">Todos os status</option>
+                        <option value="confirmado">Confirmado</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <h2 class="secao-titulo-painel">Histórico Completo</h2>
+                <div id="lista-historico"><div class="carregando-painel">Carregando...</div></div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <strong>Elite Barber</strong>
+        <p>Rua Augusta, 1234 — São Paulo, SP &nbsp;|&nbsp; <a href="contato.html">Fale Conosco</a></p>
+        <p style="margin-top:8px;">&copy; 2025 Elite Barber. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="../scripts/nav.js" defer></script>
+    <script type="module">
+        import { initializeApp }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut }
+                                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        import { getFirestore, doc, getDoc, collection,
+                 query, orderBy, getDocs, updateDoc, where }
+                                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        const app = initializeApp({
+            apiKey:            "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",
+            authDomain:        "barbearia-tcc123.firebaseapp.com",
+            projectId:         "barbearia-tcc123",
+            storageBucket:     "barbearia-tcc123.firebasestorage.app",
+            messagingSenderId: "579297265392",
+            appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"
+        });
+
+        const auth = getAuth(app);
+        const db   = getFirestore(app);
+
+        // ---- LOGOUT ----
+        document.getElementById('btn-logout-painel').addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = 'login.html';
+        });
+
+        // ---- DATA DE HOJE ----
+        const hoje = new Date();
+        const hojeStr = hoje.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const hojeISO = hoje.toISOString().split('T')[0];
+        document.getElementById('data-hoje').textContent = hojeStr.charAt(0).toUpperCase() + hojeStr.slice(1);
+
+        // ---- VERIFICA SE É ADMIN ----
+        onAuthStateChanged(auth, async usuario => {
+            if (!usuario) { window.location.href = 'login.html'; return; }
+
+            const snap = await getDoc(doc(db, 'usuarios', usuario.uid));
+            if (!snap.exists() || snap.data().role !== 'admin') {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('carregando').style.display    = 'none';
+            document.getElementById('painel-container').style.display = 'block';
+
+            carregarHoje();
+            carregarHistorico();
+        });
+
+        // ---- MONTAR CARD ----
+        function montarCard(id, dados) {
+            const statusClass = (dados.status || 'pendente').toLowerCase();
+            const podeMudar = statusClass !== 'cancelado';
+            return `
+                <div class="card-agend" id="card-${id}">
+                    <div class="agend-info">
+                        <span class="agend-nome">${dados.nome || '—'}</span>
+                        <span class="agend-detalhe">${dados.servico || '—'} &nbsp;·&nbsp; 📞 ${dados.telefone || '—'}</span>
+                        <span class="agend-detalhe">📅 ${dados.data || '—'}</span>
+                    </div>
+                    <div class="agend-direita">
+                        <span class="agend-hora">${dados.hora || '—'}</span>
+                        <span class="agend-valor">${dados.valor || '—'}</span>
+                        <span class="agendamento-status status-${statusClass}">${dados.status || 'pendente'}</span>
+                        ${podeMudar ? `
+                        <div class="agend-acoes">
+                            <button class="btn-confirmar-agend" onclick="alterarStatus('${id}', 'confirmado')">✓ Confirmar</button>
+                            <button class="btn-cancelar-agend"  onclick="alterarStatus('${id}', 'cancelado')">✕ Cancelar</button>
+                        </div>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        // ---- CARREGAR HOJE ----
+        async function carregarHoje() {
+            const lista = document.getElementById('lista-hoje');
+            try {
+                const q     = query(collection(db, 'agendamentos'), where('data', '==', hojeISO), orderBy('hora'));
+                const snaps = await getDocs(q);
+
+                let html = '';
+                let confirmados = 0, pendentes = 0, faturamento = 0;
+
+                if (snaps.empty) {
+                    lista.innerHTML = '<div class="vazio">Nenhum agendamento para hoje.</div>';
+                } else {
+                    snaps.forEach(d => {
+                        const a = d.data();
+                        html += montarCard(d.id, a);
+                        if (a.status === 'confirmado') confirmados++;
+                        else if (a.status !== 'cancelado') pendentes++;
+                        if (a.status !== 'cancelado') {
+                            const val = parseFloat((a.valor || '0').replace('R$','').replace(',','.').trim());
+                            if (!isNaN(val)) faturamento += val;
+                        }
+                    });
+                    lista.innerHTML = html;
+                }
+
+                document.getElementById('total-hoje').textContent       = snaps.size;
+                document.getElementById('total-confirmados').textContent = confirmados;
+                document.getElementById('total-pendentes').textContent   = pendentes;
+                document.getElementById('total-faturamento').textContent = `R$${faturamento.toFixed(0)}`;
+
+            } catch (e) {
+                console.error('Erro ao carregar hoje:', e);
+                lista.innerHTML = '<div class="vazio">Erro ao carregar agendamentos.</div>';
+            }
+        }
+
+        // ---- CARREGAR HISTÓRICO ----
+        async function carregarHistorico(filtroData = '', filtroStatus = '') {
+            const lista = document.getElementById('lista-historico');
+            lista.innerHTML = '<div class="carregando-painel">Carregando...</div>';
+            try {
+                const q     = query(collection(db, 'agendamentos'), orderBy('criadoEm', 'desc'));
+                const snaps = await getDocs(q);
+
+                let html = '';
+                let count = 0;
+
+                snaps.forEach(d => {
+                    const a = d.data();
+                    if (filtroData   && a.data   !== filtroData)                        return;
+                    if (filtroStatus && (a.status || 'pendente') !== filtroStatus)      return;
+                    html += montarCard(d.id, a);
+                    count++;
+                });
+
+                lista.innerHTML = count > 0 ? html : '<div class="vazio">Nenhum agendamento encontrado.</div>';
+            } catch (e) {
+                console.error('Erro ao carregar histórico:', e);
+                lista.innerHTML = '<div class="vazio">Erro ao carregar histórico.</div>';
+            }
+        }
+
+        // ---- ALTERAR STATUS ----
+        window.alterarStatus = async (id, novoStatus) => {
+            try {
+                await updateDoc(doc(db, 'agendamentos', id), { status: novoStatus });
+                carregarHoje();
+                carregarHistorico(
+                    document.getElementById('filtro-data').value,
+                    document.getElementById('filtro-status').value
+                );
+            } catch (e) {
+                console.error('Erro ao atualizar status:', e);
+                alert('Erro ao atualizar. Tente novamente.');
+            }
+        };
+
+        // ---- FILTROS DO HISTÓRICO ----
+        document.getElementById('filtro-data').addEventListener('change', e => {
+            carregarHistorico(e.target.value, document.getElementById('filtro-status').value);
+        });
+
+        document.getElementById('filtro-status').addEventListener('change', e => {
+            carregarHistorico(document.getElementById('filtro-data').value, e.target.value);
+        });
+
+        // ---- TROCAR ABA ----
+        window.trocarAba = (aba) => {
+            document.querySelectorAll('.aba-painel').forEach(b => b.classList.remove('ativa'));
+            document.querySelectorAll('.conteudo-aba').forEach(c => c.classList.remove('ativo'));
+            document.getElementById(`aba-${aba}`).classList.add('ativo');
+            event.target.classList.add('ativa');
+        };
+    </script>
+</body>
+</html>

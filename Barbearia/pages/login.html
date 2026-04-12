@@ -117,7 +117,7 @@ const app = initializeApp({
     apiKey:            "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",
     authDomain:        "barbearia-tcc123.firebaseapp.com",
     projectId:         "barbearia-tcc123",
-    storageBucket:     "databasebarbearia.firebasestorage.app",
+    storageBucket: "barbearia-tcc123.firebasestorage.app",
     messagingSenderId: "579297265392",
     appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"
 });
@@ -130,10 +130,16 @@ const provider = new GoogleAuthProvider();
 // 🔥 CORREÇÃO DO LOOP
 let jaRedirecionou = false;
 
-onAuthStateChanged(auth, u => {
+onAuthStateChanged(auth, async u => {
     if (u && !jaRedirecionou && sessionStorage.getItem('logout') !== '1') {
         jaRedirecionou = true;
-        window.location.replace('minha-conta.html');
+        const snap = await getDoc(doc(db, 'usuarios', u.uid));
+        const role = snap.exists() ? snap.data().role : null;
+        if (role === 'admin') {
+            window.location.replace('painel.html');
+        } else {
+            window.location.replace('minha-conta.html');
+        }
     }
     sessionStorage.removeItem('logout');
 });

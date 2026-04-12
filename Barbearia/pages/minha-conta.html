@@ -136,8 +136,8 @@
             authDomain: "barbearia-tcc123.firebaseapp.com",
             projectId: "barbearia-tcc123",
             storageBucket:    "barbearia-tcc123.firebasestorage.app",
-            messagingSenderId: "670662595306",
-            appId:             "1:670662595306:web:f9c46dceed9c7341ecfd93"
+            messagingSenderId: "579297265392",        // ✅
+            appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"  // ✅
         });
 
         const auth = getAuth(app);
@@ -156,21 +156,25 @@
 
         // Observa autenticação
         onAuthStateChanged(auth, async usuario => {
-            if (!usuario) {
-               if (!usuario) {
-                window.location.replace('login.html');
-                return;
-}
-            }
+    if (!usuario) {
+        window.location.replace('login.html');
+        return;
+    }
 
-            // Busca dados do Firestore
-            let dados = {};
-            try {
-                const snap = await getDoc(doc(db, 'usuarios', usuario.uid));
-                if (snap.exists()) dados = snap.data();
-            } catch (e) {
-                console.error('Erro ao buscar usuário:', e);
-            }
+    // Busca dados do Firestore
+    let dados = {};
+    try {
+        const snap = await getDoc(doc(db, 'usuarios', usuario.uid));
+        if (snap.exists()) dados = snap.data();
+    } catch (e) {
+        console.error('Erro ao buscar usuário:', e);
+    }
+
+    // Redireciona admin para o painel
+    if (dados?.role === 'admin') {
+        window.location.replace('painel.html');
+        return;
+    }
 
             const nome  = dados?.nome     || usuario.displayName || 'Cliente';
             const email = dados?.email    || usuario.email        || '—';
