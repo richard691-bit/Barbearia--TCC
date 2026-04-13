@@ -214,7 +214,7 @@
         const app = initializeApp({
     apiKey:            "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",  // ✅
     authDomain:        "barbearia-tcc123.firebaseapp.com",           // ✅
-    projectId:         "barbearia-tcc123",                           // ✅ /*Codigo estava dando conflito, estava com outras configuraçõ<es>*/
+    projectId:         "barbearia-tcc123",                           // ✅ /*Codigo estava dando conflito, estava com outras configurações*/
     storageBucket:     "barbearia-tcc123.firebasestorage.app",       // ✅
     messagingSenderId: "579297265392",
     appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"   // ✅
@@ -452,7 +452,7 @@ document.getElementById('data').addEventListener('change', (e) => {
                     telefone,
                     servico, valor, data, hora,
                     observacoes: document.getElementById('observacoes').value,
-                    status:      'confirmado',
+                    status:      'pendente',
                     criadoEm:    serverTimestamp(),
                     usuarioId:   usuarioLogado ? usuarioLogado.uid : null
                 });

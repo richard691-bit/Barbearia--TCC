@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minha Conta — Elite Barber</title>
+    <title>Painel Admin — Elite Barber</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-     <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
-    <link rel="stylesheet" href="../styles/style.css"> <!-- Estilo Principal -->
-    <link rel="stylesheet" href="../styles/painel.css"> <!-- Estilo Específico do Painel -->
-
+    <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/painel.css">
 </head>
 <body>
 
@@ -70,8 +69,10 @@
 
             <!-- ABAS -->
             <div class="abas-painel">
-                <button class="aba-painel ativa" onclick="trocarAba('hoje')">📅 Hoje</button>
-                <button class="aba-painel" onclick="trocarAba('historico')">📋 Histórico</button>
+                <button class="aba-painel ativa" id="btn-aba-hoje"       onclick="trocarAba('hoje',       this)">📅 Hoje</button>
+                <button class="aba-painel"        id="btn-aba-confirmados" onclick="trocarAba('confirmados', this)">✅ Confirmados</button>
+                <button class="aba-painel"        id="btn-aba-cancelados"  onclick="trocarAba('cancelados',  this)">❌ Cancelados</button>
+                <button class="aba-painel"        id="btn-aba-historico"   onclick="trocarAba('historico',   this)">📋 Histórico</button>
             </div>
 
             <!-- ABA HOJE -->
@@ -79,30 +80,53 @@
                 <div class="resumo-dia">
                     <div class="resumo-card">
                         <span class="numero" id="total-hoje">0</span>
-                        <span class="label">Agendamentos</span>
+                        <span class="label">Total hoje</span>
                     </div>
                     <div class="resumo-card">
-                        <span class="numero" id="total-confirmados">0</span>
+                        <span class="numero" id="total-confirmados-hoje">0</span>
                         <span class="label">Confirmados</span>
                     </div>
                     <div class="resumo-card">
-                        <span class="numero" id="total-pendentes">0</span>
+                        <span class="numero" id="total-pendentes-hoje">0</span>
                         <span class="label">Pendentes</span>
                     </div>
                     <div class="resumo-card">
-                        <span class="numero" id="total-faturamento">R$0</span>
-                        <span class="label">Faturamento</span>
+                        <span class="numero" id="total-cancelados-hoje">0</span>
+                        <span class="label">Cancelados</span>
                     </div>
                 </div>
-
                 <h2 class="secao-titulo-painel">Agendamentos de Hoje</h2>
                 <div id="lista-hoje"><div class="carregando-painel">Carregando...</div></div>
+            </div>
+
+            <!-- ABA CONFIRMADOS DO MÊS -->
+            <div class="conteudo-aba" id="aba-confirmados">
+                <div class="resumo-dia">
+                    <div class="resumo-card">
+                        <span class="numero" id="total-confirmados-mes">0</span>
+                        <span class="label">Confirmados no mês</span>
+                    </div>
+                </div>
+                <h2 class="secao-titulo-painel">Confirmados do Mês</h2>
+                <div id="lista-confirmados"><div class="carregando-painel">Carregando...</div></div>
+            </div>
+
+            <!-- ABA CANCELADOS -->
+            <div class="conteudo-aba" id="aba-cancelados">
+                <div class="resumo-dia">
+                    <div class="resumo-card">
+                        <span class="numero" id="total-cancelados-mes">0</span>
+                        <span class="label">Cancelados no mês</span>
+                    </div>
+                </div>
+                <h2 class="secao-titulo-painel">Cancelados do Mês</h2>
+                <div id="lista-cancelados"><div class="carregando-painel">Carregando...</div></div>
             </div>
 
             <!-- ABA HISTÓRICO -->
             <div class="conteudo-aba" id="aba-historico">
                 <div class="filtro-historico">
-                    <input type="date" id="filtro-data" placeholder="Filtrar por data">
+                    <input type="date" id="filtro-data">
                     <select id="filtro-status">
                         <option value="">Todos os status</option>
                         <option value="confirmado">Confirmado</option>
@@ -125,12 +149,12 @@
 
     <script src="../scripts/nav.js" defer></script>
     <script type="module">
-        import { initializeApp }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+        import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
         import { getAuth, onAuthStateChanged, signOut }
-                                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+                                     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
         import { getFirestore, doc, getDoc, collection,
                  query, orderBy, getDocs, updateDoc, where }
-                                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+                                     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
         const app = initializeApp({
             apiKey:            "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",
@@ -144,17 +168,20 @@
         const auth = getAuth(app);
         const db   = getFirestore(app);
 
+        // ---- DATAS ----
+        const hoje      = new Date();
+        const hojeISO   = hoje.toISOString().split('T')[0];
+        const hojeStr   = hoje.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const mesAtual  = hoje.getMonth();
+        const anoAtual  = hoje.getFullYear();
+
+        document.getElementById('data-hoje').textContent = hojeStr.charAt(0).toUpperCase() + hojeStr.slice(1);
+
         // ---- LOGOUT ----
         document.getElementById('btn-logout-painel').addEventListener('click', async () => {
             await signOut(auth);
             window.location.href = 'login.html';
         });
-
-        // ---- DATA DE HOJE ----
-        const hoje = new Date();
-        const hojeStr = hoje.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const hojeISO = hoje.toISOString().split('T')[0];
-        document.getElementById('data-hoje').textContent = hojeStr.charAt(0).toUpperCase() + hojeStr.slice(1);
 
         // ---- VERIFICA SE É ADMIN ----
         onAuthStateChanged(auth, async usuario => {
@@ -166,17 +193,19 @@
                 return;
             }
 
-            document.getElementById('carregando').style.display    = 'none';
+            document.getElementById('carregando').style.display       = 'none';
             document.getElementById('painel-container').style.display = 'block';
 
             carregarHoje();
+            carregarConfirmados();
+            carregarCancelados();
             carregarHistorico();
         });
 
         // ---- MONTAR CARD ----
         function montarCard(id, dados) {
             const statusClass = (dados.status || 'pendente').toLowerCase();
-            const podeMudar = statusClass !== 'cancelado';
+            const podeMudar   = statusClass !== 'cancelado';
             return `
                 <div class="card-agend" id="card-${id}">
                     <div class="agend-info">
@@ -197,6 +226,10 @@
                 </div>`;
         }
 
+        function vazio(msg) {
+            return `<div class="vazio">${msg}</div>`;
+        }
+
         // ---- CARREGAR HOJE ----
         async function carregarHoje() {
             const lista = document.getElementById('lista-hoje');
@@ -204,33 +237,80 @@
                 const q     = query(collection(db, 'agendamentos'), where('data', '==', hojeISO), orderBy('hora'));
                 const snaps = await getDocs(q);
 
-                let html = '';
-                let confirmados = 0, pendentes = 0, faturamento = 0;
+                let html = '', confirmados = 0, pendentes = 0, cancelados = 0;
 
-                if (snaps.empty) {
-                    lista.innerHTML = '<div class="vazio">Nenhum agendamento para hoje.</div>';
-                } else {
-                    snaps.forEach(d => {
-                        const a = d.data();
-                        html += montarCard(d.id, a);
-                        if (a.status === 'confirmado') confirmados++;
-                        else if (a.status !== 'cancelado') pendentes++;
-                        if (a.status !== 'cancelado') {
-                            const val = parseFloat((a.valor || '0').replace('R$','').replace(',','.').trim());
-                            if (!isNaN(val)) faturamento += val;
-                        }
-                    });
-                    lista.innerHTML = html;
-                }
+                snaps.forEach(d => {
+                    const a = d.data();
+                    html += montarCard(d.id, a);
+                    const s = (a.status || 'pendente').toLowerCase();
+                    if (s === 'confirmado') confirmados++;
+                    else if (s === 'cancelado') cancelados++;
+                    else pendentes++;
+                });
 
-                document.getElementById('total-hoje').textContent       = snaps.size;
-                document.getElementById('total-confirmados').textContent = confirmados;
-                document.getElementById('total-pendentes').textContent   = pendentes;
-                document.getElementById('total-faturamento').textContent = `R$${faturamento.toFixed(0)}`;
+                lista.innerHTML = html || vazio('Nenhum agendamento para hoje.');
+                document.getElementById('total-hoje').textContent            = snaps.size;
+                document.getElementById('total-confirmados-hoje').textContent = confirmados;
+                document.getElementById('total-pendentes-hoje').textContent   = pendentes;
+                document.getElementById('total-cancelados-hoje').textContent  = cancelados;
 
             } catch (e) {
                 console.error('Erro ao carregar hoje:', e);
-                lista.innerHTML = '<div class="vazio">Erro ao carregar agendamentos.</div>';
+                lista.innerHTML = vazio('Erro ao carregar agendamentos.');
+            }
+        }
+
+        // ---- CARREGAR CONFIRMADOS DO MÊS ----
+        async function carregarConfirmados() {
+            const lista = document.getElementById('lista-confirmados');
+            try {
+                const q     = query(collection(db, 'agendamentos'), where('status', '==', 'confirmado'), orderBy('criadoEm', 'desc'));
+                const snaps = await getDocs(q);
+
+                let html = '', count = 0;
+
+                snaps.forEach(d => {
+                    const a    = d.data();
+                    const data = a.criadoEm?.toDate ? a.criadoEm.toDate() : null;
+                    if (data && data.getMonth() === mesAtual && data.getFullYear() === anoAtual) {
+                        html += montarCard(d.id, a);
+                        count++;
+                    }
+                });
+
+                lista.innerHTML = html || vazio('Nenhum agendamento confirmado este mês.');
+                document.getElementById('total-confirmados-mes').textContent = count;
+
+            } catch (e) {
+                console.error('Erro ao carregar confirmados:', e);
+                lista.innerHTML = vazio('Erro ao carregar confirmados.');
+            }
+        }
+
+        // ---- CARREGAR CANCELADOS DO MÊS ----
+        async function carregarCancelados() {
+            const lista = document.getElementById('lista-cancelados');
+            try {
+                const q     = query(collection(db, 'agendamentos'), where('status', '==', 'cancelado'), orderBy('criadoEm', 'desc'));
+                const snaps = await getDocs(q);
+
+                let html = '', count = 0;
+
+                snaps.forEach(d => {
+                    const a    = d.data();
+                    const data = a.criadoEm?.toDate ? a.criadoEm.toDate() : null;
+                    if (data && data.getMonth() === mesAtual && data.getFullYear() === anoAtual) {
+                        html += montarCard(d.id, a);
+                        count++;
+                    }
+                });
+
+                lista.innerHTML = html || vazio('Nenhum agendamento cancelado este mês.');
+                document.getElementById('total-cancelados-mes').textContent = count;
+
+            } catch (e) {
+                console.error('Erro ao carregar cancelados:', e);
+                lista.innerHTML = vazio('Erro ao carregar cancelados.');
             }
         }
 
@@ -242,21 +322,21 @@
                 const q     = query(collection(db, 'agendamentos'), orderBy('criadoEm', 'desc'));
                 const snaps = await getDocs(q);
 
-                let html = '';
-                let count = 0;
+                let html = '', count = 0;
 
                 snaps.forEach(d => {
                     const a = d.data();
-                    if (filtroData   && a.data   !== filtroData)                        return;
-                    if (filtroStatus && (a.status || 'pendente') !== filtroStatus)      return;
+                    if (filtroData   && a.data !== filtroData)                     return;
+                    if (filtroStatus && (a.status || 'pendente') !== filtroStatus) return;
                     html += montarCard(d.id, a);
                     count++;
                 });
 
-                lista.innerHTML = count > 0 ? html : '<div class="vazio">Nenhum agendamento encontrado.</div>';
+                lista.innerHTML = count > 0 ? html : vazio('Nenhum agendamento encontrado.');
+
             } catch (e) {
                 console.error('Erro ao carregar histórico:', e);
-                lista.innerHTML = '<div class="vazio">Erro ao carregar histórico.</div>';
+                lista.innerHTML = vazio('Erro ao carregar histórico.');
             }
         }
 
@@ -265,6 +345,8 @@
             try {
                 await updateDoc(doc(db, 'agendamentos', id), { status: novoStatus });
                 carregarHoje();
+                carregarConfirmados();
+                carregarCancelados();
                 carregarHistorico(
                     document.getElementById('filtro-data').value,
                     document.getElementById('filtro-status').value
@@ -285,11 +367,11 @@
         });
 
         // ---- TROCAR ABA ----
-        window.trocarAba = (aba) => {
+        window.trocarAba = (aba, botao) => {
             document.querySelectorAll('.aba-painel').forEach(b => b.classList.remove('ativa'));
             document.querySelectorAll('.conteudo-aba').forEach(c => c.classList.remove('ativo'));
             document.getElementById(`aba-${aba}`).classList.add('ativo');
-            event.target.classList.add('ativa');
+            botao.classList.add('ativa');
         };
     </script>
 </body>
