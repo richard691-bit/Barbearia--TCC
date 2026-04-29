@@ -142,13 +142,17 @@
                     <p class="titulo-horarios">🕐 Horário Disponível</p>
                     <div class="grid-horarios">
                         <button class="time-slot" data-time="09:00">09:00</button>
-                        <button class="time-slot" data-time="09:30">09:30</button>
                         <button class="time-slot" data-time="10:00">10:00</button>
-                        <button class="time-slot" data-time="10:30">10:30</button>
-                        <button class="time-slot" data-time="14:00">14:00</button>
-                        <button class="time-slot" data-time="14:30">14:30</button>
+                        <button class="time-slot" data-time="11:00">11:00</button>
+                        <button class="time-slot" data-time="13:00">13:00</button>
+                        <button class="time-slot" data-time="14:00">14:00</button> 
+                        <button class="time-slot" data-time="15:00">15:00</button>
                         <button class="time-slot" data-time="16:00">16:00</button>
-                        <button class="time-slot" data-time="16:30">16:30</button>
+                        <button class="time-slot" data-time="17:00">17:00</button>
+                        <button class="time-slot" data-time="18:00">18:00</button>
+                        <button class="time-slot" data-time="19:00">19:00</button>
+                        <button class="time-slot" data-time="20:00">20:00</button>
+                        <button class="time-slot" data-time="21:00">21:00</button>
                     </div>
                     <p class="erro-horario" id="erro-horario">Por favor, selecione um horário.</p>
                     <div class="nav-passos">
@@ -270,30 +274,15 @@ inputData.addEventListener('change', () => {
         // ---- SELEÇÃO DE HORÁRIO ----
         document.querySelectorAll('.time-slot').forEach(slot => {
             slot.addEventListener('click', () => {
+                if (slot.disabled) return;
                 document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selecionado'));
                 slot.classList.add('selecionado');
                 document.getElementById('erro-horario').classList.remove('visivel');
             });
 
-
-
-
-
-        });// ---- SELEÇÃO DE HORÁRIO ----
-document.querySelectorAll('.time-slot').forEach(slot => {
-    slot.addEventListener('click', () => {
-        if (slot.disabled) return;
-        document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selecionado'));
-        slot.classList.add('selecionado');
-        document.getElementById('erro-horario').classList.remove('visivel');
-    });
 });
 
-
-
-
-
-// ---- VERIFICA HORÁRIOS OCUPADOS ----
+// ---- VERIFICA HORÁRIOS OCUPADOS ---- 
 async function verificarHorariosOcupados(dataSelecionada) {
     // Reseta todos os slots
     document.querySelectorAll('.time-slot').forEach(s => {
@@ -306,6 +295,29 @@ async function verificarHorariosOcupados(dataSelecionada) {
 
     if (!dataSelecionada) return;
 
+    // ---- BLOQUEIA HORÁRIOS JÁ PASSADOS SE FOR HOJE ----
+    const agora = new Date();
+    const hojeStr = agora.toISOString().split('T')[0];
+
+    if (dataSelecionada === hojeStr) {
+        const horaAtual = agora.getHours();
+        const minutoAtual = agora.getMinutes();
+
+        document.querySelectorAll('.time-slot').forEach(slot => {
+            const [h, m] = slot.getAttribute('data-time').split(':').map(Number);
+            const jaPAssou = h < horaAtual || (h === horaAtual && m <= minutoAtual);
+
+            if (jaPAssou) {
+                slot.disabled = true;
+                slot.classList.remove('selecionado');
+                slot.style.opacity = '0.35';
+                slot.style.cursor = 'not-allowed';
+                slot.style.textDecoration = 'line-through';
+            }
+        });
+    }
+
+    // ---- HORÁRIOS OCUPADOS NO FIRESTORE ----
     try {
         const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
         const q = query(
@@ -318,7 +330,7 @@ async function verificarHorariosOcupados(dataSelecionada) {
         snap.forEach(d => horariosOcupados.push(d.data().hora));
 
         document.querySelectorAll('.time-slot').forEach(slot => {
-            if (horariosOcupados.includes(slot.getAttribute('data-time'))) {  /*verifica se o horário do slot está na lista de horários ocupados*/
+            if (horariosOcupados.includes(slot.getAttribute('data-time'))) {
                 slot.disabled = true;
                 slot.classList.remove('selecionado');
                 slot.style.opacity = '0.35';
@@ -476,36 +488,20 @@ document.getElementById('data').addEventListener('change', (e) => {
             if (usuarioLogado) document.getElementById('link-minha-conta').style.display = 'inline-block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    </script>
-    
 
-     <!-- quando estiver logando aparece o botal meu perfeil -->
-    <script type="module">
-    import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        // ---- BOTÃO AUTH NO NAV ----
+        const btnAuth = document.getElementById('btn-nav-auth');
+        onAuthStateChanged(auth, usuario => {
+            if (usuario) {
+                btnAuth.textContent = 'Minha Conta';
+                btnAuth.href = 'minha-conta.html';
+            } else {
+                btnAuth.textContent = 'Login';
+                btnAuth.href = 'login.html';
+            }
+        });
 
-    const app = initializeApp({
-        apiKey:            "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",
-        authDomain:        "barbearia-tcc123.firebaseapp.com",
-        projectId:         "barbearia-tcc123",
-        storageBucket:     "barbearia-tcc123.firebasestorage.app",
-        messagingSenderId: "579297265392",
-        appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"
-    });
-
-    const auth = getAuth(app);
-    const btnAuth = document.getElementById('btn-nav-auth');
-
-    onAuthStateChanged(auth, usuario => {
-        if (usuario) {
-            btnAuth.textContent = 'Minha Conta';
-            btnAuth.href = 'minha-conta.html';
-        } else {
-            btnAuth.textContent = 'Login';
-            btnAuth.href = 'login.html';
-        }
-    });
 </script>
-
+<script type="module" src="../scripts/notificacao.js"></script>
 </body>
 </html>
