@@ -55,7 +55,10 @@
     </aside>
 
     <main>
-        <div class="carregando-painel" id="carregando">Verificando acesso...</div>
+        <div class="carregando-painel" id="carregando">
+            Verificando acesso...
+            <br><small id="debug-msg" style="color: red; margin-top: 10px;"></small>
+        </div>
 
         <div class="painel-container" id="painel-container" style="display:none">
 
@@ -64,12 +67,14 @@
                     <h1>Painel do Barbeiro</h1>
                     <p id="data-hoje"></p>
                 </div>
-                <button class="btn-login-nav" id="btn-logout-painel">Sair</button>
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <button class="btn-login-nav" id="btn-logout-painel">Sair</button>
+                </div>
             </div>
 
             <!-- ABAS -->
             <div class="abas-painel">
-                <button class="aba-painel ativa" id="btn-aba-hoje"       onclick="trocarAba('hoje',       this)">📅 Hoje</button>
+                <button class="aba-painel ativa" id="btn-aba-hoje"        onclick="trocarAba('hoje',        this)">📅 Hoje</button>
                 <button class="aba-painel"        id="btn-aba-confirmados" onclick="trocarAba('confirmados', this)">✅ Confirmados</button>
                 <button class="aba-painel"        id="btn-aba-cancelados"  onclick="trocarAba('cancelados',  this)">❌ Cancelados</button>
                 <button class="aba-painel"        id="btn-aba-historico"   onclick="trocarAba('historico',   this)">📋 Histórico</button>
@@ -149,230 +154,311 @@
 
     <script src="../scripts/nav.js" defer></script>
     <script type="module">
-        import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-        import { getAuth, onAuthStateChanged, signOut }
-                                     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
         import { getFirestore, doc, getDoc, collection,
-                 query, orderBy, getDocs, updateDoc, where }
-                                     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+                 query, orderBy, getDocs, updateDoc, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-        const app = initializeApp({
-            apiKey:            "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",
-            authDomain:        "barbearia-tcc123.firebaseapp.com",
-            projectId:         "barbearia-tcc123",
-            storageBucket:     "barbearia-tcc123.firebasestorage.app",
-            messagingSenderId: "579297265392",
-            appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"
-        });
-
-        const auth = getAuth(app);
-        const db   = getFirestore(app);
-
-        // ---- DATAS ----
-        const hoje      = new Date();
-        const hojeISO   = hoje.toISOString().split('T')[0];
-        const hojeStr   = hoje.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const mesAtual  = hoje.getMonth();
-        const anoAtual  = hoje.getFullYear();
-
-        document.getElementById('data-hoje').textContent = hojeStr.charAt(0).toUpperCase() + hojeStr.slice(1);
-
-        // ---- LOGOUT ----
-        document.getElementById('btn-logout-painel').addEventListener('click', async () => {
-            await signOut(auth);
-            window.location.href = 'login.html';
-        });
-
-        // ---- VERIFICA SE É ADMIN ----
-        onAuthStateChanged(auth, async usuario => {
-            if (!usuario) { window.location.href = 'login.html'; return; }
-
-            const snap = await getDoc(doc(db, 'usuarios', usuario.uid));
-            if (!snap.exists() || snap.data().role !== 'admin') {
-                window.location.href = 'index.html';
-                return;
-            }
-
-            document.getElementById('carregando').style.display       = 'none';
-            document.getElementById('painel-container').style.display = 'block';
-
-            carregarHoje();
-            carregarConfirmados();
-            carregarCancelados();
-            carregarHistorico();
-        });
-
-        // ---- MONTAR CARD ----
-        function montarCard(id, dados) {
-            const statusClass = (dados.status || 'pendente').toLowerCase();
-            const podeMudar   = statusClass !== 'cancelado';
-            return `
-                <div class="card-agend" id="card-${id}">
-                    <div class="agend-info">
-                        <span class="agend-nome">${dados.nome || '—'}</span>
-                        <span class="agend-detalhe">${dados.servico || '—'} &nbsp;·&nbsp; 📞 ${dados.telefone || '—'}</span>
-                        <span class="agend-detalhe">📅 ${dados.data || '—'}</span>
-                    </div>
-                    <div class="agend-direita">
-                        <span class="agend-hora">${dados.hora || '—'}</span>
-                        <span class="agend-valor">${dados.valor || '—'}</span>
-                        <span class="agendamento-status status-${statusClass}">${dados.status || 'pendente'}</span>
-                        ${podeMudar ? `
-                        <div class="agend-acoes">
-                            <button class="btn-confirmar-agend" onclick="alterarStatus('${id}', 'confirmado')">✓ Confirmar</button>
-                            <button class="btn-cancelar-agend"  onclick="alterarStatus('${id}', 'cancelado')">✕ Cancelar</button>
-                        </div>` : ''}
-                    </div>
-                </div>`;
-        }
-
-        function vazio(msg) {
-            return `<div class="vazio">${msg}</div>`;
-        }
-
-        // ---- CARREGAR HOJE ----
-        async function carregarHoje() {
-            const lista = document.getElementById('lista-hoje');
-            try {
-                const q     = query(collection(db, 'agendamentos'), where('data', '==', hojeISO), orderBy('hora'));
-                const snaps = await getDocs(q);
-
-                let html = '', confirmados = 0, pendentes = 0, cancelados = 0;
-
-                snaps.forEach(d => {
-                    const a = d.data();
-                    html += montarCard(d.id, a);
-                    const s = (a.status || 'pendente').toLowerCase();
-                    if (s === 'confirmado') confirmados++;
-                    else if (s === 'cancelado') cancelados++;
-                    else pendentes++;
-                });
-
-                lista.innerHTML = html || vazio('Nenhum agendamento para hoje.');
-                document.getElementById('total-hoje').textContent            = snaps.size;
-                document.getElementById('total-confirmados-hoje').textContent = confirmados;
-                document.getElementById('total-pendentes-hoje').textContent   = pendentes;
-                document.getElementById('total-cancelados-hoje').textContent  = cancelados;
-
-            } catch (e) {
-                console.error('Erro ao carregar hoje:', e);
-                lista.innerHTML = vazio('Erro ao carregar agendamentos.');
-            }
-        }
-
-        // ---- CARREGAR CONFIRMADOS DO MÊS ----
-        async function carregarConfirmados() {
-            const lista = document.getElementById('lista-confirmados');
-            try {
-                const q     = query(collection(db, 'agendamentos'), where('status', '==', 'confirmado'), orderBy('criadoEm', 'desc'));
-                const snaps = await getDocs(q);
-
-                let html = '', count = 0;
-
-                snaps.forEach(d => {
-                    const a    = d.data();
-                    const data = a.criadoEm?.toDate ? a.criadoEm.toDate() : null;
-                    if (data && data.getMonth() === mesAtual && data.getFullYear() === anoAtual) {
-                        html += montarCard(d.id, a);
-                        count++;
-                    }
-                });
-
-                lista.innerHTML = html || vazio('Nenhum agendamento confirmado este mês.');
-                document.getElementById('total-confirmados-mes').textContent = count;
-
-            } catch (e) {
-                console.error('Erro ao carregar confirmados:', e);
-                lista.innerHTML = vazio('Erro ao carregar confirmados.');
-            }
-        }
-
-        // ---- CARREGAR CANCELADOS DO MÊS ----
-        async function carregarCancelados() {
-            const lista = document.getElementById('lista-cancelados');
-            try {
-                const q     = query(collection(db, 'agendamentos'), where('status', '==', 'cancelado'), orderBy('criadoEm', 'desc'));
-                const snaps = await getDocs(q);
-
-                let html = '', count = 0;
-
-                snaps.forEach(d => {
-                    const a    = d.data();
-                    const data = a.criadoEm?.toDate ? a.criadoEm.toDate() : null;
-                    if (data && data.getMonth() === mesAtual && data.getFullYear() === anoAtual) {
-                        html += montarCard(d.id, a);
-                        count++;
-                    }
-                });
-
-                lista.innerHTML = html || vazio('Nenhum agendamento cancelado este mês.');
-                document.getElementById('total-cancelados-mes').textContent = count;
-
-            } catch (e) {
-                console.error('Erro ao carregar cancelados:', e);
-                lista.innerHTML = vazio('Erro ao carregar cancelados.');
-            }
-        }
-
-        // ---- CARREGAR HISTÓRICO ----
-        async function carregarHistorico(filtroData = '', filtroStatus = '') {
-            const lista = document.getElementById('lista-historico');
-            lista.innerHTML = '<div class="carregando-painel">Carregando...</div>';
-            try {
-                const q     = query(collection(db, 'agendamentos'), orderBy('criadoEm', 'desc'));
-                const snaps = await getDocs(q);
-
-                let html = '', count = 0;
-
-                snaps.forEach(d => {
-                    const a = d.data();
-                    if (filtroData   && a.data !== filtroData)                     return;
-                    if (filtroStatus && (a.status || 'pendente') !== filtroStatus) return;
-                    html += montarCard(d.id, a);
-                    count++;
-                });
-
-                lista.innerHTML = count > 0 ? html : vazio('Nenhum agendamento encontrado.');
-
-            } catch (e) {
-                console.error('Erro ao carregar histórico:', e);
-                lista.innerHTML = vazio('Erro ao carregar histórico.');
-            }
-        }
-
-        // ---- ALTERAR STATUS ----
-        window.alterarStatus = async (id, novoStatus) => {
-            try {
-                await updateDoc(doc(db, 'agendamentos', id), { status: novoStatus });
-                carregarHoje();
-                carregarConfirmados();
-                carregarCancelados();
-                carregarHistorico(
-                    document.getElementById('filtro-data').value,
-                    document.getElementById('filtro-status').value
-                );
-            } catch (e) {
-                console.error('Erro ao atualizar status:', e);
-                alert('Erro ao atualizar. Tente novamente.');
-            }
+        const debugMsg = (msg) => {
+            console.log(msg);
+            document.getElementById('debug-msg').textContent = msg;
         };
 
-        // ---- FILTROS DO HISTÓRICO ----
-        document.getElementById('filtro-data').addEventListener('change', e => {
-            carregarHistorico(e.target.value, document.getElementById('filtro-status').value);
-        });
+        try {
+            debugMsg('Inicializando Firebase...');
 
-        document.getElementById('filtro-status').addEventListener('change', e => {
-            carregarHistorico(document.getElementById('filtro-data').value, e.target.value);
-        });
+            const app = initializeApp({
+                apiKey:            "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",
+                authDomain:        "barbearia-tcc123.firebaseapp.com",
+                projectId:         "barbearia-tcc123",
+                storageBucket:     "barbearia-tcc123.firebasestorage.app",
+                messagingSenderId: "579297265392",
+                appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"
+            });
 
-        // ---- TROCAR ABA ----
-        window.trocarAba = (aba, botao) => {
-            document.querySelectorAll('.aba-painel').forEach(b => b.classList.remove('ativa'));
-            document.querySelectorAll('.conteudo-aba').forEach(c => c.classList.remove('ativo'));
-            document.getElementById(`aba-${aba}`).classList.add('ativo');
-            botao.classList.add('ativa');
-        };
+            const auth = getAuth(app);
+            const db   = getFirestore(app);
+
+            setTimeout(() => {
+                if (document.getElementById('carregando').style.display !== 'none') {
+                    debugMsg('⚠️ Timeout na autenticação.');
+                }
+            }, 10000);
+
+            const hoje     = new Date();
+            const hojeISO  = hoje.toISOString().split('T')[0];
+            const hojeStr  = hoje.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const mesAtual = hoje.getMonth();
+            const anoAtual = hoje.getFullYear();
+
+            document.getElementById('data-hoje').textContent = hojeStr.charAt(0).toUpperCase() + hojeStr.slice(1);
+
+            document.getElementById('btn-logout-painel').addEventListener('click', async () => {
+                await signOut(auth);
+                window.location.href = 'login.html';
+            });
+
+            onAuthStateChanged(auth, async usuario => {
+                try {
+                    if (!usuario) {
+                        debugMsg('❌ Nenhum usuário autenticado');
+                        setTimeout(() => window.location.href = 'login.html', 2000);
+                        return;
+                    }
+
+                    debugMsg('✅ Usuário autenticado: ' + usuario.email);
+
+                    const snap = await getDoc(doc(db, 'usuarios', usuario.uid));
+                    if (!snap.exists()) {
+                        debugMsg('❌ Usuário não existe no Firestore');
+                        setTimeout(() => window.location.href = 'index.html', 2000);
+                        return;
+                    }
+
+                    const userData = snap.data();
+                    debugMsg('✅ Role: ' + userData.role);
+
+                    if (userData.role !== 'admin') {
+                        debugMsg('❌ Acesso negado');
+                        setTimeout(() => window.location.href = 'index.html', 2000);
+                        return;
+                    }
+
+                    debugMsg('✅ Acesso admin confirmado!');
+                    document.getElementById('carregando').style.display       = 'none';
+                    document.getElementById('painel-container').style.display = 'block';
+
+                    carregarHoje();
+                    carregarConfirmados();
+                    carregarCancelados();
+                    carregarHistorico();
+
+                } catch (e) {
+                    debugMsg('❌ Erro: ' + e.message);
+                    console.error(e);
+                }
+            });
+
+            // ---- FUNÇÕES AUXILIARES ----
+            function vazio(msg) {
+                return `<div class="vazio">${msg}</div>`;
+            }
+
+            // ---- CARREGAR HOJE ----
+            async function carregarHoje() {
+                const lista = document.getElementById('lista-hoje');
+                try {
+                    const q     = query(collection(db, 'agendamentos'), where('data', '==', hojeISO), orderBy('hora'));
+                    const snaps = await getDocs(q);
+
+                    let html = '', confirmados = 0, pendentes = 0, cancelados = 0;
+
+                    snaps.forEach(d => {
+                        const a = d.data();
+                        html += montarCard(d.id, a);
+                        const s = (a.status || 'pendente').toLowerCase();
+                        if (s === 'confirmado') confirmados++;
+                        else if (s === 'cancelado') cancelados++;
+                        else pendentes++;
+                    });
+
+                    lista.innerHTML = html || vazio('Nenhum agendamento para hoje.');
+                    document.getElementById('total-hoje').textContent             = snaps.size;
+                    document.getElementById('total-confirmados-hoje').textContent = confirmados;
+                    document.getElementById('total-pendentes-hoje').textContent   = pendentes;
+                    document.getElementById('total-cancelados-hoje').textContent  = cancelados;
+
+                } catch (e) {
+                    console.error('Erro ao carregar hoje:', e);
+                    lista.innerHTML = vazio('Erro ao carregar agendamentos.');
+                }
+            }
+
+            // ---- CARREGAR CONFIRMADOS DO MÊS ----
+            async function carregarConfirmados() {
+                const lista = document.getElementById('lista-confirmados');
+                try {
+                    const q     = query(collection(db, 'agendamentos'), where('status', '==', 'confirmado'), orderBy('criadoEm', 'desc'));
+                    const snaps = await getDocs(q);
+
+                    let html = '', count = 0;
+
+                    snaps.forEach(d => {
+                        const a    = d.data();
+                        const data = a.criadoEm?.toDate ? a.criadoEm.toDate() : null;
+                        if (data && data.getMonth() === mesAtual && data.getFullYear() === anoAtual) {
+                            html += montarCard(d.id, a);
+                            count++;
+                        }
+                    });
+
+                    lista.innerHTML = html || vazio('Nenhum agendamento confirmado este mês.');
+                    document.getElementById('total-confirmados-mes').textContent = count;
+
+                } catch (e) {
+                    console.error('Erro ao carregar confirmados:', e);
+                    lista.innerHTML = vazio('Erro ao carregar confirmados.');
+                }
+            }
+
+            // ---- CARREGAR CANCELADOS DO MÊS ----
+            async function carregarCancelados() {
+                const lista = document.getElementById('lista-cancelados');
+                try {
+                    const q     = query(collection(db, 'agendamentos'), where('status', '==', 'cancelado'), orderBy('criadoEm', 'desc'));
+                    const snaps = await getDocs(q);
+
+                    let html = '', count = 0;
+
+                    snaps.forEach(d => {
+                        const a    = d.data();
+                        const data = a.criadoEm?.toDate ? a.criadoEm.toDate() : null;
+                        if (data && data.getMonth() === mesAtual && data.getFullYear() === anoAtual) {
+                            html += montarCard(d.id, a);
+                            count++;
+                        }
+                    });
+
+                    lista.innerHTML = html || vazio('Nenhum agendamento cancelado este mês.');
+                    document.getElementById('total-cancelados-mes').textContent = count;
+
+                } catch (e) {
+                    console.error('Erro ao carregar cancelados:', e);
+                    lista.innerHTML = vazio('Erro ao carregar cancelados.');
+                }
+            }
+
+            // ---- CARREGAR HISTÓRICO ----
+            async function carregarHistorico(filtroData = '', filtroStatus = '') {
+                const lista = document.getElementById('lista-historico');
+                lista.innerHTML = '<div class="carregando-painel">Carregando...</div>';
+                try {
+                    const q     = query(collection(db, 'agendamentos'), orderBy('criadoEm', 'desc'));
+                    const snaps = await getDocs(q);
+
+                    let html = '', count = 0;
+
+                    snaps.forEach(d => {
+                        const a = d.data();
+                        if (filtroData   && a.data !== filtroData)                     return;
+                        if (filtroStatus && (a.status || 'pendente') !== filtroStatus) return;
+                        html += montarCard(d.id, a);
+                        count++;
+                    });
+
+                    lista.innerHTML = count > 0 ? html : vazio('Nenhum agendamento encontrado.');
+
+                } catch (e) {
+                    console.error('Erro ao carregar histórico:', e);
+                    lista.innerHTML = vazio('Erro ao carregar histórico.');
+                }
+            }
+
+            // ---- MONTAR CARD ----
+            function montarCard(id, dados) {
+                const statusClass   = (dados.status || 'pendente').toLowerCase();
+                const podeConfirmar = statusClass !== 'confirmado' && statusClass !== 'cancelado';
+                const podeCancelar  = statusClass !== 'cancelado';
+                const telLimpo      = (dados.telefone || '').replace(/\D/g, '');
+
+                return `
+                    <div class="card-agend" id="card-${id}">
+                        <div class="agend-info">
+                            <span class="agend-nome">${dados.nome || '—'}</span>
+                            <span class="agend-detalhe">${dados.servico || '—'} &nbsp;·&nbsp; 📞 ${dados.telefone || '—'}</span>
+                            <span class="agend-detalhe">📅 ${dados.data || '—'}</span>
+                        </div>
+                        <div class="agend-direita">
+                            <span class="agend-hora">${dados.hora || '—'}</span>
+                            <span class="agend-valor">${dados.valor || '—'}</span>
+                            <span class="agendamento-status status-${statusClass}">${dados.status || 'pendente'}</span>
+                            <div class="agend-acoes">
+                                ${podeConfirmar ? `
+                                    <button class="btn-confirmar-agend"
+                                        data-id="${id}"
+                                        data-acao="confirmado"
+                                        data-nome="${dados.nome}"
+                                        data-telefone="${telLimpo}"
+                                        data-data="${dados.data}"
+                                        data-hora="${dados.hora}">
+                                        ✓ Confirmar
+                                    </button>` : ''}
+                                ${podeCancelar ? `<button class="btn-cancelar-agend" data-id="${id}" data-acao="cancelado">✕ Cancelar</button>` : ''}
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            // ---- FILTROS DO HISTÓRICO ----
+            document.getElementById('filtro-data').addEventListener('change', e => {
+                carregarHistorico(e.target.value, document.getElementById('filtro-status').value);
+            });
+
+            document.getElementById('filtro-status').addEventListener('change', e => {
+                carregarHistorico(document.getElementById('filtro-data').value, e.target.value);
+            });
+
+            // ---- TROCAR ABA ----
+            window.trocarAba = (aba, botao) => {
+                document.querySelectorAll('.aba-painel').forEach(b => b.classList.remove('ativa'));
+                document.querySelectorAll('.conteudo-aba').forEach(c => c.classList.remove('ativo'));
+                document.getElementById(`aba-${aba}`).classList.add('ativo');
+                botao.classList.add('ativa');
+            };
+
+            // ---- EVENT DELEGATION ----
+            document.addEventListener('click', async (e) => {
+                const btn = e.target.closest('button');
+                if (!btn || !btn.dataset.id) return;
+
+                const id         = btn.dataset.id;
+                const novoStatus = btn.dataset.acao;
+
+                if (novoStatus === 'confirmado' || novoStatus === 'cancelado') {
+                    try {
+                        const clienteNome     = btn.dataset.nome;
+                        const clienteTelefone = btn.dataset.telefone;
+                        const agendData       = btn.dataset.data;
+                        const agendHora       = btn.dataset.hora;
+
+                        btn.disabled    = true;
+                        btn.textContent = '...';
+
+                        await updateDoc(doc(db, 'agendamentos', id), { status: novoStatus });
+
+                        if (novoStatus === 'confirmado' && clienteTelefone) {
+                            const dataBr   = agendData.split('-').reverse().join('/');
+                            const mensagem = encodeURIComponent(
+`Olá ${clienteNome}!
+
+Seu agendamento na Elite Barber foi confirmado!
+
+Data: ${dataBr}
+Hora: ${agendHora}
+
+Estamos te aguardando!`
+                            );
+                            window.open(`https://wa.me/55${clienteTelefone}?text=${mensagem}`, '_blank');
+                        }
+
+                        carregarHoje();
+                        carregarConfirmados();
+                        carregarCancelados();
+                        carregarHistorico();
+
+                    } catch (err) {
+                        console.error('Erro ao atualizar:', err);
+                        alert('Erro ao atualizar status.');
+                        btn.disabled = false;
+                    }
+                }
+            });
+
+        } catch (e) {
+            console.error('Erro geral:', e);
+            document.getElementById('debug-msg').textContent = '❌ Erro ao inicializar: ' + e.message;
+        }
     </script>
+    <script type="module" src="../scripts/notificaçao.js"></script>
 </body>
 </html>
