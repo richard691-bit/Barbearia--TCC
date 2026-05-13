@@ -152,11 +152,10 @@
         }
 
         .agend-hora {
-            font-family: var(--fonte-titulo);
-            font-size: 1.3rem;
-            font-weight: 700;
+            font-size: 0.95rem;
+            font-weight: 600;
             color: var(--preto);
-        }
+}
 
         .agend-valor {
             font-size: 0.88rem;

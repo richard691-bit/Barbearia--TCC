@@ -360,16 +360,17 @@
                 const podeConfirmar = statusClass !== 'confirmado' && statusClass !== 'cancelado';
                 const podeCancelar  = statusClass !== 'cancelado';
                 const telLimpo      = (dados.telefone || '').replace(/\D/g, '');
+                const dataBr = dados.data ? dados.data.split('-').reverse().join('/') : '—';
 
                 return `
                     <div class="card-agend" id="card-${id}">
                         <div class="agend-info">
                             <span class="agend-nome">${dados.nome || '—'}</span>
                             <span class="agend-detalhe">${dados.servico || '—'} &nbsp;·&nbsp; 📞 ${dados.telefone || '—'}</span>
-                            <span class="agend-detalhe">📅 ${dados.data || '—'}</span>
+                            <span class="agend-detalhe">📅 ${dataBr}</span>
                         </div>
                         <div class="agend-direita">
-                            <span class="agend-hora">${dados.hora || '—'}</span>
+                            <span class="agend-hora" >${dados.hora || '—'}</span>
                             <span class="agend-valor">${dados.valor || '—'}</span>
                             <span class="agendamento-status status-${statusClass}">${dados.status || 'pendente'}</span>
                             <div class="agend-acoes">
@@ -383,7 +384,16 @@
                                         data-hora="${dados.hora}">
                                         ✓ Confirmar
                                     </button>` : ''}
-                                ${podeCancelar ? `<button class="btn-cancelar-agend" data-id="${id}" data-acao="cancelado">✕ Cancelar</button>` : ''}
+                                ${podeCancelar ? `
+                                    <button class="btn-cancelar-agend"
+                                        data-id="${id}"
+                                        data-acao="cancelado"
+                                        data-nome="${dados.nome}"
+                                        data-telefone="${telLimpo}"
+                                        data-data="${dados.data}"
+                                        data-hora="${dados.hora}">
+                                        ✕ Cancelar
+                                    </button>` : ''}
                             </div>
                         </div>
                     </div>`;
@@ -429,15 +439,19 @@
                         if (novoStatus === 'confirmado' && clienteTelefone) {
                             const dataBr   = agendData.split('-').reverse().join('/');
                             const mensagem = encodeURIComponent(
-`Olá ${clienteNome}!
+                                `Olá ${clienteNome}!\n` +
+                                `Seu agendamento na Elite Barber foi confirmado!\n` +
+                                `Data: ${dataBr} Hora: ${agendHora} Estamos te aguardando!`);
+                            window.open(`https://wa.me/55${clienteTelefone}?text=${mensagem}`, '_blank');
+                        }
 
-Seu agendamento na Elite Barber foi confirmado!
-
-Data: ${dataBr}
-Hora: ${agendHora}
-
-Estamos te aguardando!`
-                            );
+                        if (novoStatus === 'cancelado' && clienteTelefone) {
+                            const dataBr   = agendData.split('-').reverse().join('/');
+                            const mensagem = encodeURIComponent(
+                                `Olá ${clienteNome}!\n` +
+                                `Infelizmente seu agendamento na Elite Barber foi cancelado.\n` +
+                                `Data: ${dataBr} Hora: ${agendHora}\n` +
+                                `Entre em contato para reagendar. Pedimos desculpas pelo inconveniente!`);
                             window.open(`https://wa.me/55${clienteTelefone}?text=${mensagem}`, '_blank');
                         }
 
