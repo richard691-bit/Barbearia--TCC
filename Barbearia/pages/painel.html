@@ -368,6 +368,11 @@
                             <span class="agend-nome">${dados.nome || '—'}</span>
                             <span class="agend-detalhe">${dados.servico || '—'} &nbsp;·&nbsp; 📞 ${dados.telefone || '—'}</span>
                             <span class="agend-detalhe">📅 ${dataBr}</span>
+                            ${dados.observacoes ? `
+                                <div class="agend-obs">
+                                    <span class="agend-obs-icone"></span>
+                                    <span><strong>Obs:</strong> ${dados.observacoes}</span>
+                                </div>` : ''}
                         </div>
                         <div class="agend-direita">
                             <span class="agend-hora" >${dados.hora || '—'}</span>
