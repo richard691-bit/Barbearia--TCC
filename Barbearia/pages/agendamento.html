@@ -60,18 +60,15 @@
     <div class="modal-overlay" id="modal-login">
       <div class="modal-card">
         <div class="icone">🔒</div>
-        <h3>Quase lá!</h3>
+        <h3>Login Necessário</h3>
         <p>
-          Para salvar seu agendamento na sua conta faça login. Ou continue sem
-          conta — seu horário ainda será reservado.
+          Para realizar um agendamento, é necessário ter uma conta. Faça login
+          ou cadastre-se gratuitamente.
         </p>
         <div class="modal-botoes">
           <a href="login.html" class="modal-btn-login"
             >Fazer Login / Cadastrar</a
           >
-          <button class="modal-btn-visitante" id="modal-btn-visitante">
-            Continuar sem conta
-          </button>
         </div>
       </div>
     </div>
@@ -107,7 +104,7 @@
             </div>
           </div>
 
-          <!-- PASSO 1 -->
+          <!-- PASSO 1  NOME E TELEFONE-->
           <div class="passo ativo" id="passo-1">
             <h3>Seus Dados Pessoais</h3>
             <div class="campo" id="campo-nome">
@@ -125,7 +122,7 @@
             </div>
           </div>
 
-          <!-- PASSO 2 -->
+          <!-- PASSO 2 MARCAR HORARIO DATA E O CORTE -->
           <div class="passo" id="passo-2">
             <h3>Escolha o Serviço e Data</h3>
             <div class="campo" id="campo-servico">
@@ -182,7 +179,7 @@
             </div>
           </div>
 
-          <!-- PASSO 3 -->
+          <!-- PASSO 3 CONFIRMAR HORARIO E LOGIN -->
           <div class="passo" id="passo-3">
             <h3>Revisão e Confirmação</h3>
             <div class="revisao-box">
@@ -294,7 +291,6 @@
       let passoAtual = 1;
       const totalPassos = 3;
       let usuarioLogado = null;
-      let confirmarSemLogin = false;
 
       // Bloqueia datas passadas e segundas-feiras
       const inputData = document.getElementById("data");
