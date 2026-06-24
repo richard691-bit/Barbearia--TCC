@@ -289,6 +289,7 @@
       const db = getFirestore(app);
 
       let passoAtual = 1;
+      let confirmarSemLogin = false;
       const totalPassos = 3;
       let usuarioLogado = null;
 
@@ -296,6 +297,7 @@
       const inputData = document.getElementById("data");
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
+      inputData.addEventListener('click', function () { this.showPicker(); });
 
       // Data mínima: hoje
       inputData.min = hoje.toISOString().split("T")[0];
@@ -396,6 +398,7 @@
           const q = query(
             collection(db, "agendamentos"),
             where("data", "==", dataSelecionada),
+            where("status", "in", ["pendente", "confirmado"]),
           );
           const snap = await getDocs(q);
 
@@ -524,22 +527,13 @@
 
       // ---- CONFIRMAR ----
       document.getElementById("btn-confirmar").addEventListener("click", () => {
-        if (!usuarioLogado && !confirmarSemLogin) {
+        if (!usuarioLogado) {
           document.getElementById("modal-login").classList.add("aberto");
           return;
         }
         salvarAgendamento();
       });
-
-      // Modal: continuar sem conta
-      document
-        .getElementById("modal-btn-visitante")
-        .addEventListener("click", () => {
-          confirmarSemLogin = true;
-          document.getElementById("modal-login").classList.remove("aberto");
-          salvarAgendamento();
-        });
-
+      
       document.getElementById("modal-login").addEventListener("click", (e) => {
         if (e.target === document.getElementById("modal-login")) {
           document.getElementById("modal-login").classList.remove("aberto");

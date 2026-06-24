@@ -106,7 +106,7 @@
 .campo select,
 .campo textarea {
     width: 100%;
-    border: 1px solid var(--cinza-borda);
+    border: 1.5px solid #aaaaaa;
     border-radius: var(--raio);
     padding: 11px 14px;
     font-family: var(--fonte-corpo);

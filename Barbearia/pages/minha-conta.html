@@ -124,110 +124,117 @@
 
     <!-- Firebase -->
     <script type="module">
-        import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-        import { getAuth, onAuthStateChanged, signOut }
-                                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-        import { getFirestore, doc, getDoc,
-                 collection, query, where, orderBy, getDocs }
-                                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signOut }
+                               from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import { getFirestore, doc, getDoc,
+             collection, query, where, orderBy, getDocs }
+                               from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-        const app = initializeApp({
-            apiKey: "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",
-            authDomain: "barbearia-tcc123.firebaseapp.com",
-            projectId: "barbearia-tcc123",
-            storageBucket:    "barbearia-tcc123.firebasestorage.app",
-            messagingSenderId: "579297265392",        // ✅
-            appId:             "1:579297265392:web:3528dfc37a4b29fef8e435"  // ✅
-        });
+    const app = initializeApp({
+        apiKey: "AIzaSyCIkN4dtsMy_XCoGucHWrzOGeDtDbmD9SY",
+        authDomain: "barbearia-tcc123.firebaseapp.com",
+        projectId: "barbearia-tcc123",
+        storageBucket: "barbearia-tcc123.firebasestorage.app",
+        messagingSenderId: "579297265392",
+        appId: "1:579297265392:web:3528dfc37a4b29fef8e435"
+    });
 
-        const auth = getAuth(app);
-        const db   = getFirestore(app);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
 
-        // Flag para evitar loop durante o logout
-        let saindo = false;
+    let saindo = false;
 
-        // Logout
-        document.getElementById('btn-logout').addEventListener('click', async () => {
-            saindo = true;
-            sessionStorage.setItem('logout', '1');
-            await signOut(auth);
-            window.location.href = 'login.html';
-        });
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+        saindo = true;
+        sessionStorage.setItem('logout', '1');
+        await signOut(auth);
+        window.location.href = 'login.html';
+    });
 
-        // Observa autenticação
-        onAuthStateChanged(auth, async usuario => {
-    if (!usuario) {
-        window.location.replace('login.html');
-        return;
-    }
+    onAuthStateChanged(auth, async usuario => {
+        if (!usuario) {
+            window.location.replace('login.html');
+            return;
+        }
 
-    // Busca dados do Firestore
-    let dados = {};
-    try {
-        const snap = await getDoc(doc(db, 'usuarios', usuario.uid));
-        if (snap.exists()) dados = snap.data();
-    } catch (e) {
-        console.error('Erro ao buscar usuário:', e);
-    }
+        let dados = {};
+        try {
+            const snap = await getDoc(doc(db, 'usuarios', usuario.uid));
+            if (snap.exists()) dados = snap.data();
+        } catch (e) {
+            console.error('Erro ao buscar usuário:', e);
+        }
 
-    // Redireciona admin para o painel
-    if (dados?.role === 'admin') {
-        window.location.replace('painel.html');
-        return;
-    }
+        if (dados?.role === 'admin') {
+            window.location.replace('painel.html');
+            return;
+        }
 
-            const nome  = dados?.nome     || usuario.displayName || 'Cliente';
-            const email = dados?.email    || usuario.email        || '—';
-            const tel   = dados?.telefone || 'Não informado';
-            const data  = dados?.criadoEm?.toDate
-                ? dados.criadoEm.toDate().toLocaleDateString('pt-BR') : '—';
+        const nome  = dados?.nome     || usuario.displayName || 'Cliente';
+        const email = dados?.email    || usuario.email        || '—';
+        const tel   = dados?.telefone || 'Não informado';
+        const data  = dados?.criadoEm?.toDate
+            ? dados.criadoEm.toDate().toLocaleDateString('pt-BR') : '—';
 
-            document.getElementById('perfil-avatar').textContent = nome.charAt(0).toUpperCase();
-            document.getElementById('perfil-nome').textContent   = nome;
-            document.getElementById('perfil-email').textContent  = email;
-            document.getElementById('dado-nome').textContent     = nome;
-            document.getElementById('dado-email').textContent    = email;
-            document.getElementById('dado-telefone').textContent = tel;
-            document.getElementById('dado-criado').textContent   = data;
+        document.getElementById('perfil-avatar').textContent = nome.charAt(0).toUpperCase();
+        document.getElementById('perfil-nome').textContent   = nome;
+        document.getElementById('perfil-email').textContent  = email;
+        document.getElementById('dado-nome').textContent     = nome;
+        document.getElementById('dado-email').textContent    = email;
+        document.getElementById('dado-telefone').textContent = tel;
+        document.getElementById('dado-criado').textContent   = data;
 
-            // Busca agendamentos
-            try {
-                const q     = query(
-                    collection(db, 'agendamentos'),
-                    where('usuarioId', '==', usuario.uid),
-                    orderBy('criadoEm', 'desc')
-                );
-                const snaps = await getDocs(q);
-                const lista = document.getElementById('lista-agendamentos');
+        try {
+            const q = query(
+                collection(db, 'agendamentos'),
+                where('usuarioId', '==', usuario.uid),
+                orderBy('criadoEm', 'desc')
+            );
+            const snaps = await getDocs(q);
+            const lista = document.getElementById('lista-agendamentos');
 
-                if (snaps.empty) {
-                    lista.innerHTML = '<p class="sem-agendamentos">Você ainda não tem agendamentos. <a href="agendamento.html">Agendar agora →</a></p>';
-                } else {
-                    lista.innerHTML = '';
-                    snaps.forEach(d => {
-                        const a = d.data();
-                        const statusClass = (a.status || 'pendente').toLowerCase();
-                        lista.innerHTML += `
-                            <div class="card-agendamento">
-                                <div class="agendamento-info">
-                                    <span class="agendamento-servico">${a.servico || '—'}</span>
-                                    <span class="agendamento-data">${a.data || '—'} às ${a.hora || '—'}</span>
-                                </div>
-                                <div class="agendamento-direita">
-                                    <span class="agendamento-valor">${a.valor || '—'}</span>
-                                    <span class="agendamento-status status-${statusClass}">${a.status || 'pendente'}</span>
-                                </div>
-                            </div>`;
-                    });
+            if (snaps.empty) {
+                lista.innerHTML = '<p class="sem-agendamentos">Você ainda não tem agendamentos. <a href="agendamento.html">Agendar agora →</a></p>';
+            } else {
+                lista.innerHTML = '';
+                snaps.forEach(d => {
+                    const a = d.data();
+                    const statusClass = (a.status || 'pendente').toLowerCase();
+
+                    // ✅ Formatação da data DENTRO do forEach
+                    const [ano, mes, dia] = (a.data || '').split('-');
+                    const dataFormatada = a.data ? `${dia}/${mes}/${ano}` : '—';
+
+                    lista.innerHTML += `
+                        <div class="card-agendamento">
+                            <div class="agendamento-info">
+                                <span class="agendamento-servico">${a.servico || '—'}</span>
+                                <span class="agendamento-data">${dataFormatada} às ${a.hora || '—'}</span>
+                            </div>
+                            <div class="agendamento-direita">
+                                <span class="agendamento-valor">${a.valor || '—'}</span>
+                                <span class="agendamento-status status-${statusClass}">${a.status || 'pendente'}</span>
+                            </div>
+                        </div>`;
+                });
+
+                // ✅ Telefone do agendamento se perfil não tiver
+                if (tel === 'Não informado' && !snaps.empty) {
+                    const telAgendamento = snaps.docs[0].data().telefone;
+                    if (telAgendamento) {
+                        document.getElementById('dado-telefone').textContent = telAgendamento;
+                    }
                 }
-            } catch (e) {
-                console.error('Erro ao buscar agendamentos:', e);
             }
+        } catch (e) {
+            console.error('Erro ao buscar agendamentos:', e);
+        }
 
-            document.getElementById('carregando').style.display      = 'none';
-            document.getElementById('conta-container').style.display = 'block';
-        });
-    </script>
+        document.getElementById('carregando').style.display      = 'none';
+        document.getElementById('conta-container').style.display = 'block';
+    });
+</script>
 </body>
 <script type="module" src="../scripts/notificaçao.js"></script>
 </html>
